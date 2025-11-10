@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Streamlit
+.streamlit/
+streamlit.log
+
+# 缓存和数据文件
+data/cache/*.json
+data/analysis_history.json
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Mac
+.DS_Store
+
+# 敏感信息 - 不要上传真实Token！
+settings.py
+
+# Temporary files
+*.tmp
+nohup.out

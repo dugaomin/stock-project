@@ -1,0 +1,5 @@
+streamlit>=1.28.0
+pandas>=2.0.0
+requests>=2.31.0
+tushare>=1.2.89
+plotly>=5.0.0
