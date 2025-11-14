@@ -1,15 +1,41 @@
 # -*- coding: utf-8 -*-
-"""A股财务综合分析系统 - 基于审计意见与三大核心指标"""
+"""
+A股财务综合分析系统 - 主应用模块
+
+功能概述：
+    基于审计意见与三大核心财务指标（资产负债率、毛利率、经营现金流）
+    的智能筛选系统，帮助投资者快速评估公司财务健康状况。
+
+核心功能：
+    1. 单项分析 - 深度分析单只股票的财务数据
+    2. 市赚率估值 - 基于PE和ROE的估值方法
+    3. 历史记录 - 分析历史管理
+
+技术栈：
+    - Streamlit：Web UI框架
+    - Tushare Pro：数据源API
+    - Plotly：交互式图表
+    - Pandas：数据处理
+
+作者：gaomindu
+版本：2.0.0
+更新：2025-11-10
+"""
 
 import pandas as pd
 import streamlit as st
 from datetime import datetime
-from utils import analyze_fundamentals, run_connectivity_tests
+from typing import Optional
+from utils import analyze_fundamentals, run_connectivity_tests, fetch_valuation_data, get_user_points_info
 import json
 import os
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from cache_manager import data_cache
+from valuation import PRValuation
+from screening import run_full_market_screening, StockScreener
+import threading
+import time
 
 # 页面配置
 st.set_page_config(
@@ -22,7 +48,60 @@ st.set_page_config(
 HISTORY_FILE = "data/analysis_history.json"
 os.makedirs("data", exist_ok=True)
 
-# 行业评分标准
+# 指数代码别名映射（常用宽基指数）
+INDEX_CODE_ALIASES = {
+    "沪深300": "000300.SH",
+    "HS300": "000300.SH",
+    "000300": "000300.SH",
+    "399300": "399300.SZ",
+    "深证成指": "399001.SZ",
+    "399001": "399001.SZ",
+    "恒生指数": "HSI",
+    "HSI": "HSI",
+    "恒生国企": "HSCEI",
+    "HSCEI": "HSCEI",
+}
+
+
+def normalize_ts_code(raw_code: str, target_type: str) -> str:
+    """
+    规范化股票/指数代码，自动补全交易所后缀
+    
+    Args:
+        raw_code: 用户输入的原始代码
+        target_type: 标的类型（个股/宽基指数）
+        
+    Returns:
+        带有交易所后缀的标准代码
+    """
+    if not raw_code:
+        return ""
+    
+    code = raw_code.upper().strip()
+    
+    if code in INDEX_CODE_ALIASES:
+        return INDEX_CODE_ALIASES[code]
+    
+    if code.endswith((".SH", ".SZ", ".BJ", ".HK")):
+        return code
+    
+    if target_type == "宽基指数":
+        if code in INDEX_CODE_ALIASES:
+            return INDEX_CODE_ALIASES[code]
+        if code.startswith(("000", "001", "002", "003")):
+            return f"{code}.SH"
+        if code.startswith(("399", "159", "150", "560")):
+            return f"{code}.SZ"
+        return f"{code}.SH"
+    
+    if len(code) == 6:
+        if code.startswith(("6", "9")):
+            return f"{code}.SH"
+        if code.startswith("8"):
+            return f"{code}.BJ"
+        return f"{code}.SZ"
+    
+    return code
 SECTOR_RULES = {
     "地产": {
         "name": "地产",
@@ -74,7 +153,9 @@ if 'debug_mode' not in st.session_state:
 if 'start_year' not in st.session_state:
     st.session_state.start_year = 2018
 if 'end_year' not in st.session_state:
-    st.session_state.end_year = 2023  # 当前最新完整年份
+    # 自动设置为去年（最新完整年份）
+    current_year = datetime.now().year
+    st.session_state.end_year = current_year - 1
 if 'selected_sector' not in st.session_state:
     st.session_state.selected_sector = "消费"
 if 'ocf_consecutive_years' not in st.session_state:
@@ -84,7 +165,17 @@ if 'api_delay' not in st.session_state:
 
 
 class HistoryManager:
-    """历史记录管理"""
+    """
+    历史记录管理类
+    
+    功能：
+        - 保存分析历史到JSON文件
+        - 加载历史记录
+        - 限制最多保留100条记录
+    
+    存储位置：
+        data/analysis_history.json
+    """
     
     @staticmethod
     def load_history():
@@ -114,10 +205,46 @@ class HistoryManager:
 
 
 def format_percentage(value: float) -> str:
-    """格式化百分比"""
+    """
+    将小数格式化为百分比字符串
+    
+    Args:
+        value: 小数值（如0.6表示60%）
+        
+    Returns:
+        格式化后的百分比字符串（如"60.00%"），数据缺失返回"-"
+    """
     if value is None or pd.isna(value):
         return "-"
     return f"{value * 100:.2f}%"
+
+
+def format_metric_value(
+    value: Optional[float],
+    spec: str = ".2f",
+    suffix: str = "",
+    default: str = "无数据",
+) -> str:
+    """
+    安全格式化数值，避免None或NaN导致的格式化报错
+    
+    Args:
+        value: 数值
+        spec: 格式化规格（例如'.2f'）
+        suffix: 追加的单位（例如'元'、'%'）
+        default: 缺失数据时返回的字符串
+        
+    Returns:
+        格式化后的字符串
+    """
+    if value is None:
+        return default
+    if isinstance(value, (int, float)) and pd.isna(value):
+        return default
+    try:
+        return f"{format(value, spec)}{suffix}"
+    except (TypeError, ValueError):
+        return default
 
 
 def format_number(value: float, unit="万元") -> str:
@@ -130,7 +257,21 @@ def format_number(value: float, unit="万元") -> str:
 
 
 def evaluate_year(row, sector_rules) -> dict:
-    """评估单年财务指标"""
+    """
+    评估单年财务指标，计算年度得分（0-3分）
+    
+    评分规则：
+        - 资产负债率达标：+1分
+        - 毛利率达标：+1分
+        - 经营现金流为正：+1分
+    
+    Args:
+        row: DataFrame的一行数据，包含财务指标
+        sector_rules: 行业评分标准字典
+        
+    Returns:
+        (年度得分, 各项检查结果字典)
+    """
     score = 0
     checks = {
         'debt_ratio_pass': False,
@@ -166,7 +307,18 @@ def evaluate_year(row, sector_rules) -> dict:
 
 
 def check_ocf_consecutive(metrics: pd.DataFrame, k: int) -> tuple:
-    """检查经营现金流连续性"""
+    """
+    检查经营现金流连续性
+    
+    核心问题：连续k年（通常3-5年）经营现金流为正吗？
+    
+    Args:
+        metrics: 财务指标DataFrame
+        k: 要求的连续年数
+        
+    Returns:
+        (是否连续k年为正, 为正年数, 现金流≥利润年数, 总年数, 最长连续年数)
+    """
     consecutive = 0
     max_consecutive = 0
     positive_count = 0
@@ -323,6 +475,7 @@ def render_core_indicators(metrics: pd.DataFrame, evaluation: dict, sector_rules
                 st.error("❌ 未达标")
         else:
             st.warning("数据缺失")
+            st.caption("💡 说明：Tushare原始数据中该年份的营业收入(revenue)或营业成本(oper_cost)字段缺失，无法计算毛利率。这可能是财报未披露或数据源问题。")
         
         st.caption("📝 产品/服务的基本赚钱能力")
     
@@ -394,6 +547,15 @@ def render_year_health_table(metrics: pd.DataFrame, evaluation: dict, sector_rul
                     st.markdown(f"{icon} **毛利率** {gross_margin_pct:.2f}%")
                 else:
                     st.markdown("❌ **毛利率** 数据缺失")
+                    # 检查具体缺失原因
+                    revenue = row.get('revenue', 0)
+                    oper_cost = row.get('oper_cost', 0)
+                    if pd.isna(revenue) or revenue == 0:
+                        st.caption(f"💡 原因：营业收入(revenue)缺失或为0")
+                    elif pd.isna(oper_cost):
+                        st.caption(f"💡 原因：营业成本(oper_cost)缺失")
+                    else:
+                        st.caption(f"💡 原因：Tushare原始数据缺失，无法计算")
             
             with cols[2]:
                 icon = "✅" if checks['ocf_positive'] else "❌"
@@ -521,7 +683,22 @@ def render_detailed_table(metrics: pd.DataFrame, evaluation: dict):
 
 
 def page_single_analysis():
-    """单项分析页面"""
+    """
+    单项分析页面
+    
+    功能：
+        1. 输入股票代码（自动识别补全后缀）
+        2. 获取公司基本信息
+        3. 获取财务数据（审计+资产负债+利润+现金流）
+        4. 计算三大核心指标
+        5. 生成年度健康度报告
+        6. 展示趋势图表
+        7. 给出投资建议
+        8. 保存到历史记录
+    
+    数据缓存：
+        查询结果自动缓存24小时，第二次查询秒开
+    """
     st.header("🔎 单项分析")
     
     # 输入区域
@@ -550,6 +727,9 @@ def page_single_analysis():
         # 计算日期范围
         start_date = f"{st.session_state.start_year}0101"
         end_date = f"{st.session_state.end_year}1231"
+        
+        # 显示实际使用的年份范围（调试信息）
+        st.info(f"📅 查询年份范围：{st.session_state.start_year}年 - {st.session_state.end_year}年 (开始日期: {start_date}, 结束日期: {end_date})")
         
         # 连通性检测
         if st.session_state.debug_mode:
@@ -869,29 +1049,770 @@ def page_single_analysis():
         })
 
 
+def page_pr_valuation():
+    """
+    市赚率估值分析页面
+    
+    功能：
+        基于PE和ROE的估值方法，判断股票/指数的买卖时机
+    
+    支持类型：
+        - 个股：使用修正市赚率（考虑分红质量）
+        - 宽基指数：使用宽基市赚率（分母150）
+    
+    核心公式：
+        - 标准PR = PE / ROE / 100（ROE取小数形式）
+        - 修正PR = N × PE / ROE / 100（N根据股息支付率确定）
+        - 宽基PR = PE / ROE / 150
+    
+    输出：
+        - 基础数据展示
+        - 详细计算过程
+        - 交易信号（买入/持有/卖出）
+        - 建议仓位
+        - 可视化阈值对照
+    """
+    st.header("💰 市赚率估值分析")
+    st.markdown("*基于PE和ROE的估值方法，判断买卖时机*")
+    
+    st.info(
+        """
+**速记规则（注意ROE需先换算为小数，如13%→0.13）：**
+
+- **买单个公司**：`PR = PE / ROE / 150` → PR < 1.0 划算，PR > 1.0 偏贵（需结合股息修正）
+- **买整个指数**：`PR = PE / ROE / 150` → PR < 1.0 划算，PR > 1.0 偏贵（不同指数有细分阈值）
+- **巴菲特卖点**：`PR ≈ 1.5` → 整个市场太贵，建议大幅减仓/清仓
+        """
+    )
+    
+    # 输入区域
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        raw_code = st.text_input(
+            "股票/指数代码",
+            value="600519",
+            placeholder="例如：600519 或 000300（沪深300）",
+            help="支持个股或指数代码",
+            key="pr_code"
+        ).strip().upper()
+    
+    with col2:
+        # 选择类型
+        target_type = st.selectbox(
+            "类型",
+            options=["个股", "宽基指数"],
+            help="个股使用修正市赚率，指数使用宽基市赚率"
+        )
+    
+    # 日期选择
+    trade_date = st.date_input(
+        "查询日期",
+        value=datetime.now(),
+        help="查询指定交易日的估值数据"
+    )
+    
+    ts_code = normalize_ts_code(raw_code, target_type)
+    if ts_code and ts_code != raw_code:
+        st.info(f"📌 标准代码：**{ts_code}**")
+    
+    if st.button("📊 开始估值分析", type="primary", use_container_width=True, key="btn_pr"):
+        if not ts_code:
+            st.error("请填写股票代码")
+            return
+        
+        # 转换日期格式
+        trade_date_str = trade_date.strftime("%Y%m%d")
+        
+        # 获取估值数据
+        try:
+            with st.spinner(f"正在获取 {ts_code} 在 {trade_date_str} 的估值数据..."):
+                val_data = fetch_valuation_data(ts_code, trade_date_str, target_type)
+            
+            if val_data is None:
+                st.error("❌ 未获取到估值数据")
+                st.warning("""
+**可能原因：**
+1. 该日期不是交易日
+2. 数据尚未更新
+3. 股票代码错误
+
+**建议：**
+- 选择最近的交易日
+- 检查股票代码是否正确
+                """)
+                return
+            
+            # 显示原始数据
+            st.subheader("📊 基础数据")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            col1.metric("收盘价", format_metric_value(val_data.get('close'), suffix="元"))
+            col2.metric("市盈率TTM", format_metric_value(val_data.get('pe_ttm')))
+            col3.metric("加权ROE", format_metric_value(val_data.get('roe_waa'), suffix="%"))
+            col4.metric("每股收益", format_metric_value(val_data.get('eps'), suffix="元"))
+            col5.metric("每股股息", format_metric_value(val_data.get('dividend_per_share'), suffix="元"))
+            
+            missing_metrics = []
+            if val_data.get('pe_ttm') is None:
+                missing_metrics.append("市盈率TTM（pe_ttm）")
+            if target_type == "个股" and val_data.get('roe_waa') is None:
+                missing_metrics.append("加权ROE（roe_waa）")
+            if target_type == "个股" and val_data.get('eps') is None:
+                missing_metrics.append("每股收益（eps）")
+            
+            if missing_metrics:
+                st.warning("⚠️ 以下核心字段缺失，部分公式可能无法计算：\n- " + "\n- ".join(missing_metrics))
+            
+            st.divider()
+            
+            # 计算市赚率
+            if target_type == "个股":
+                # 个股估值分析
+                result = PRValuation.analyze_stock_valuation(val_data)
+                
+                st.subheader("💎 个股估值分析")
+                
+                # 显示计算过程
+                with st.expander("📐 计算过程详解", expanded=True):
+                    st.markdown("### 第1步：计算股息支付率")
+                    payout_ratio = result.get('payout_ratio')
+                    dividend_val = val_data.get('dividend_per_share')
+                    eps_val = val_data.get('eps')
+                    if dividend_val is None:
+                        st.info("提示：最近披露的分红记录中未找到每股股息，可能未分红或尚未披露。")
+                    else:
+                        st.caption(f"最近一次每股股息：{format_metric_value(dividend_val, '.2f', '元')}")
+                    if payout_ratio is not None:
+                        st.latex(r"\text{股息支付率} = \frac{\text{每股股息}}{\text{基本每股收益}} \times 100\%")
+                        dividend_text = format_metric_value(dividend_val)
+                        eps_text = format_metric_value(eps_val)
+                        st.markdown(f"= {dividend_text} / {eps_text} × 100%")
+                        st.success(f"**= {format_metric_value(payout_ratio, '.2f', '%')}**")
+                    else:
+                        st.warning("无法计算（缺少分红或收益数据）")
+                    
+                    st.markdown("### 第2步：确定修正系数N")
+                    payout = result.get('payout_ratio')
+                    if payout is None:
+                        st.warning("股息支付率缺失，默认采用N = 2.0进行保守评估")
+                    elif payout >= 50:
+                        st.info(f"股息支付率{format_metric_value(payout, '.2f', '%')} ≥ 50% → **N = 1.0**（分红充足）")
+                    elif payout <= 25:
+                        st.warning(f"股息支付率{format_metric_value(payout, '.2f', '%')} ≤ 25% → **N = 2.0**（分红不足，需加倍修正）")
+                    else:
+                        st.info(
+                            f"股息支付率{format_metric_value(payout, '.2f', '%')}在25%-50%之间 → "
+                            f"**N = 50% / {format_metric_value(payout, '.2f', '%')} = {format_metric_value(result['correction_factor'], '.3f', '')}**"
+                        )
+                    
+                    st.markdown("### 第3步：计算修正市赚率")
+                    st.latex(r"\text{修正PR} = N \times \frac{\text{PE}_{\text{TTM}}}{\text{ROE（小数）}} \div 150")
+                    pe_text = format_metric_value(val_data.get('pe_ttm'))
+                    roe_raw = val_data.get('roe_waa')
+                    if roe_raw is None or (isinstance(roe_raw, (int, float)) and pd.isna(roe_raw)):
+                        roe_decimal = None
+                    else:
+                        try:
+                            roe_val = float(roe_raw)
+                            roe_decimal = roe_val / 100 if abs(roe_val) > 1 else roe_val
+                        except (TypeError, ValueError):
+                            roe_decimal = None
+                    roe_text = format_metric_value(val_data.get('roe_waa'), suffix="%")
+                    roe_decimal_text = format_metric_value(roe_decimal, ".4f")
+                    st.caption(f"ROE原始值：{roe_text} → 换算为小数：{roe_decimal_text}")
+                    st.markdown(
+                        f"= {format_metric_value(result.get('correction_factor'), '.3f')} × {pe_text} / {roe_decimal_text} / 150"
+                    )
+                    if result['corrected_pr'] is not None:
+                        st.success(f"**= {format_metric_value(result['corrected_pr'], '.4f', '')}**")
+                    else:
+                        st.warning("缺少PE或ROE数据，无法计算修正市赚率")
+                    
+                    st.markdown("### 第4步：汇总公式拆解")
+                    standard_pr_val = result.get('standard_pr')
+                    corrected_pr_val = result.get('corrected_pr')
+                    st.markdown(
+                        f"""
+**标准市赚率（PR_standard）**  
+= {pe_text} / {roe_decimal_text} / 150  
+{f"= {format_metric_value(standard_pr_val, '.4f', '')}" if standard_pr_val is not None else "= 无法计算（缺少PE或ROE）"}
+                        
+**修正市赚率（PR_corrected）**  
+= {format_metric_value(result.get('correction_factor'), '.3f')} × {pe_text} / {roe_decimal_text} / 150  
+{f"= {format_metric_value(corrected_pr_val, '.4f', '')}" if corrected_pr_val is not None else "= 无法计算（缺少PE或ROE）"}
+                        """
+                    )
+                
+                # 显示最终结果
+                col1, col2, col3 = st.columns(3)
+                col1.metric("标准市赚率", format_metric_value(result.get('standard_pr'), ".4f", "", "N/A"))
+                col2.metric("修正市赚率", format_metric_value(result.get('corrected_pr'), ".4f", "", "N/A"))
+                col3.metric("股息支付率", format_metric_value(result.get('payout_ratio'), ".2f", "%", "N/A"))
+                
+                # 计算并显示巴菲特指标
+                pe_ttm = val_data.get('pe_ttm')
+                roe_waa = val_data.get('roe_waa')
+                buffett_sell_pr = PRValuation.calculate_buffett_sell_pr(pe_ttm, roe_waa)
+                buffett_buy_pr = PRValuation.calculate_buffett_buy_pr(pe_ttm, roe_waa)
+                
+                st.divider()
+                st.subheader("📊 巴菲特估值指标")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("### 🏛️ 巴菲特卖标普指标（系数150）")
+                    st.markdown("*判断整个市场是否太贵*")
+                    buffett_sell_display = format_metric_value(buffett_sell_pr, ".4f", "", "N/A")
+                    st.metric("PR值", buffett_sell_display)
+                    if buffett_sell_pr is not None:
+                        if buffett_sell_pr > 1.5:
+                            st.error("⚠️ PR > 1.5，整个市场太贵了，建议清仓")
+                        elif buffett_sell_pr > 1.0:
+                            st.warning("⚠️ PR > 1.0，市场偏高，考虑减仓")
+                        else:
+                            st.success("✅ PR ≤ 1.0，市场估值合理")
+                    st.caption("公式：PR = PE / ROE / 150")
+                
+                with col2:
+                    st.markdown("### 💰 巴菲特购买股票指标（系数100）")
+                    st.markdown("*判断个股是否值得买入*")
+                    buffett_buy_display = format_metric_value(buffett_buy_pr, ".4f", "", "N/A")
+                    st.metric("PR值", buffett_buy_display)
+                    if buffett_buy_pr is not None:
+                        if buffett_buy_pr < 0.4:
+                            st.success("✅ PR < 0.4，严重低估（用40美分买1美元资产），强烈买入")
+                        elif buffett_buy_pr < 0.6:
+                            st.info("💡 PR 0.4-0.6，低估（用50-60美分买1美元资产），可买入")
+                        elif buffett_buy_pr < 1.0:
+                            st.info("💡 PR 0.6-1.0，合理估值，可持有")
+                        else:
+                            st.warning("⚠️ PR > 1.0，可能高估，建议卖出或持有")
+                    st.caption("公式：PR = PE / ROE / 100")
+                
+            else:
+                # 指数估值分析
+                index_name = st.selectbox(
+                    "选择指数",
+                    options=["沪深300", "恒生指数", "恒生国企"],
+                    help="不同指数有不同的估值基准"
+                )
+                
+                result = PRValuation.analyze_index_valuation(val_data, index_name)
+                
+                st.subheader("💎 指数估值分析")
+                
+                # 显示计算过程
+                with st.expander("📐 计算过程详解", expanded=True):
+                    st.markdown("### 宽基指数市赚率公式")
+                    st.latex(r"\text{宽基PR} = \frac{\text{PE}_{\text{TTM}}}{\text{ROE（小数）}} \div 150")
+                    index_roe_raw = val_data.get('roe_waa')
+                    if index_roe_raw is None or (isinstance(index_roe_raw, (int, float)) and pd.isna(index_roe_raw)):
+                        index_roe_decimal = None
+                    else:
+                        try:
+                            roe_val = float(index_roe_raw)
+                            index_roe_decimal = roe_val / 100 if abs(roe_val) > 1 else roe_val
+                        except (TypeError, ValueError):
+                            index_roe_decimal = None
+                    index_roe_percent_text = format_metric_value(index_roe_raw, suffix="%")
+                    index_roe_decimal_text = format_metric_value(index_roe_decimal, ".4f")
+                    st.caption(f"ROE原始值：{index_roe_percent_text} → 换算为小数：{index_roe_decimal_text}")
+                    st.markdown(
+                        f"= {format_metric_value(val_data.get('pe_ttm'))} / {index_roe_decimal_text} / 150"
+                    )
+                    if result['broad_pr'] is not None:
+                        st.success(f"**= {format_metric_value(result['broad_pr'], '.4f', '')}**")
+                    else:
+                        st.warning("缺少PE或ROE数据，无法计算宽基市赚率")
+                        st.caption("提示：指数需要通过 `index_dailybasic` 获取PE，通过行业研究机构或手工录入ROE")
+                    
+                    st.caption("💡 个股与宽基指数当前统一采用150作为分母，指数相当于继续沿用保守口径")
+                    
+                    st.markdown("### 公式拆解")
+                    broad_pr_val = result.get('broad_pr')
+                    st.markdown(
+                        f"""
+**宽基市赚率（PR_broad）**  
+= {format_metric_value(val_data.get('pe_ttm'))} / {index_roe_decimal_text} / 150  
+{f"= {format_metric_value(broad_pr_val, '.4f', '')}" if broad_pr_val is not None else "= 无法计算（缺少PE或ROE）"}
+                        """
+                    )
+                
+                # 显示指数配置
+                benchmark = result['benchmark']
+                if benchmark:
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("合理PR基准", format_metric_value(benchmark.get('reasonable_pr'), ".2f", ""))
+                    col2.metric("股息税率", format_metric_value(benchmark.get('tax_rate', 0) * 100, ".0f", "%"))
+                    col3.metric("当前PR", format_metric_value(result.get('broad_pr'), ".4f", "", "N/A"))
+                
+                # 计算并显示巴菲特指标（指数分析也显示）
+                index_pe_ttm = val_data.get('pe_ttm')
+                index_roe_waa = val_data.get('roe_waa')
+                index_buffett_sell_pr = PRValuation.calculate_buffett_sell_pr(index_pe_ttm, index_roe_waa)
+                index_buffett_buy_pr = PRValuation.calculate_buffett_buy_pr(index_pe_ttm, index_roe_waa)
+                
+                st.divider()
+                st.subheader("📊 巴菲特估值指标")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("### 🏛️ 巴菲特卖标普指标（系数150）")
+                    st.markdown("*判断整个市场是否太贵*")
+                    index_buffett_sell_display = format_metric_value(index_buffett_sell_pr, ".4f", "", "N/A")
+                    st.metric("PR值", index_buffett_sell_display)
+                    if index_buffett_sell_pr is not None:
+                        if index_buffett_sell_pr > 1.5:
+                            st.error("⚠️ PR > 1.5，整个市场太贵了，建议清仓")
+                        elif index_buffett_sell_pr > 1.0:
+                            st.warning("⚠️ PR > 1.0，市场偏高，考虑减仓")
+                        else:
+                            st.success("✅ PR ≤ 1.0，市场估值合理")
+                    st.caption("公式：PR = PE / ROE / 150")
+                
+                with col2:
+                    st.markdown("### 💰 巴菲特购买股票指标（系数100）")
+                    st.markdown("*判断个股是否值得买入*")
+                    index_buffett_buy_display = format_metric_value(index_buffett_buy_pr, ".4f", "", "N/A")
+                    st.metric("PR值", index_buffett_buy_display)
+                    if index_buffett_buy_pr is not None:
+                        if index_buffett_buy_pr < 0.4:
+                            st.success("✅ PR < 0.4，严重低估（用40美分买1美元资产），强烈买入")
+                        elif index_buffett_buy_pr < 0.6:
+                            st.info("💡 PR 0.4-0.6，低估（用50-60美分买1美元资产），可买入")
+                        elif index_buffett_buy_pr < 1.0:
+                            st.info("💡 PR 0.6-1.0，合理估值，可持有")
+                        else:
+                            st.warning("⚠️ PR > 1.0，可能高估，建议卖出或持有")
+                    st.caption("公式：PR = PE / ROE / 100")
+            
+            st.divider()
+            
+            # 显示交易信号
+            if result.get('signal'):
+                signal = result['signal']
+                
+                st.subheader("🚦 交易信号")
+                
+                # 根据信号类型显示不同颜色
+                if signal['signal_type'] == "买入":
+                    st.success(f"### 🟢 {signal['signal_type']}")
+                elif signal['signal_type'] == "持有":
+                    st.info(f"### 🟡 {signal['signal_type']}")
+                elif signal['signal_type'] == "部分卖出":
+                    st.warning(f"### 🟠 {signal['signal_type']}")
+                else:
+                    st.error(f"### 🔴 {signal['signal_type']}")
+                
+                # 详细信号信息
+                col1, col2, col3, col4 = st.columns(4)
+                col1.metric("估值状态", signal['valuation_status'])
+                col2.metric("市赚率", format_metric_value(signal.get('pr_value'), ".4f"))
+                col3.metric("建议仓位", format_metric_value(signal.get('suggested_position', 0) * 100, ".1f", "%"))
+                col4.metric("卖出比例", format_metric_value(signal.get('sell_ratio', 0) * 100, ".1f", "%"))
+                
+                # 决策理由
+                st.info(f"**决策理由：** {signal['reason']}")
+                
+                # 阈值对照
+                with st.expander("📊 阈值对照表", expanded=False):
+                    threshold_df = pd.DataFrame([
+                        {"阈值类型": "买入阈值", "PR值": signal['buy_threshold'], "说明": "低于此值建议买入"},
+                        {"阈值类型": "开始卖出", "PR值": signal['sell_start'], "说明": "高于此值开始卖出"},
+                        {"阈值类型": "完全清仓", "PR值": signal['sell_all'], "说明": "高于此值全部清仓"},
+                        {"阈值类型": "当前PR", "PR值": signal['pr_value'], "说明": "当前市赚率水平"}
+                    ])
+                    st.dataframe(threshold_df, use_container_width=True, hide_index=True)
+                
+                # 可视化阈值
+                fig = go.Figure()
+                
+                # 添加阈值线
+                fig.add_hline(y=signal['buy_threshold'], line_dash="dash", line_color="green", 
+                             annotation_text=f"买入阈值 {signal['buy_threshold']:.2f}")
+                fig.add_hline(y=signal['sell_start'], line_dash="dash", line_color="orange", 
+                             annotation_text=f"卖出阈值 {signal['sell_start']:.2f}")
+                fig.add_hline(y=signal['sell_all'], line_dash="dash", line_color="red", 
+                             annotation_text=f"清仓阈值 {signal['sell_all']:.2f}")
+                
+                # 添加当前PR点
+                fig.add_scatter(x=["当前PR"], y=[signal['pr_value']], 
+                               mode='markers', marker=dict(size=20, color='blue'),
+                               name="当前市赚率")
+                
+                fig.update_layout(
+                    title="市赚率水平对照",
+                    yaxis_title="PR值",
+                    height=400,
+                    showlegend=True
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+            
+        except Exception as e:
+            st.error(f"❌ 估值分析失败：{e}")
+            if st.session_state.debug_mode:
+                st.exception(e)
+
+
+def page_full_market_screening():
+    """
+    全网筛选页面 - 简化版本，一步步实现
+    
+    业务逻辑：
+        1. 获取全部A股股票列表（排除ST股）
+        2. 遍历列表，对每只股票执行深度分析
+        3. 应用基本面和估值的双重筛选规则
+        4. 收集所有通过筛选的股票
+        5. 按修正市赚率从低到高进行排序
+        6. 输出最终结果列表
+    
+    筛选规则：
+        第一层：基本面判断
+            - 审计意见：近5年审计结论必须全部为"标准无保留意见"
+            - 现金流质量：经营活动现金流≥0 且 收到的现金≥账面利润
+        
+        第二层：巴菲特估值判断
+            - 市赚率计算：使用修正市赚率（NPR）
+            - 估值阈值：PR ≤ 用户设定的上限（默认1.0）
+            - ROE要求：≥ 用户设定的下限（默认10.0%）
+    """
+    # 初始化session_state（简化版）
+    if 'screening_results' not in st.session_state:
+        st.session_state.screening_results = []
+    if 'stock_list' not in st.session_state:
+        st.session_state.stock_list = None  # 缓存股票列表
+    if 'screening_in_progress' not in st.session_state:
+        st.session_state.screening_in_progress = False  # 筛选是否进行中
+    if 'screening_progress' not in st.session_state:
+        st.session_state.screening_progress = {
+            'processed': 0,
+            'total': 0,
+            'passed': 0,
+            'failed': 0,
+            'current_index': 0  # 当前处理的股票索引
+        }
+    if 'screening_history' not in st.session_state:
+        st.session_state.screening_history = []  # 筛选历史记录
+
+    # 左侧配置面板
+    with st.sidebar:
+        st.header("⚙️ 配置面板")
+        
+        # 分析参数
+        st.subheader("📊 分析参数")
+        
+        years = st.number_input(
+            "年数",
+            min_value=3,
+            max_value=10,
+            value=5,
+            step=1,
+            help="分析历史财务数据的年数"
+        )
+        
+        min_roe = st.number_input(
+            "最低ROE (%)",
+            min_value=0.0,
+            max_value=50.0,
+            value=10.0,
+            step=0.5,
+            help="最低净资产收益率要求"
+        )
+        
+        max_pr = st.number_input(
+            "最高PR",
+            min_value=0.1,
+            max_value=2.0,
+            value=1.0,
+            step=0.1,
+            help="修正市赚率的上限"
+        )
+        
+        # 高级设置
+        st.subheader("🔧 高级设置")
+        
+        api_delay = st.number_input(
+            "API间隔 (秒)",
+            min_value=0.0,
+            max_value=5.0,
+            value=0.5,
+            step=0.1,
+            help="API调用之间的延迟时间"
+        )
+        
+        max_workers = st.number_input(
+            "线程数",
+            min_value=1,
+            max_value=8,
+            value=4,
+            step=1,
+            help="并发处理线程数"
+        )
+        
+        # 历史记录
+        st.subheader("📜 历史记录")
+        
+        if st.session_state.screening_history:
+            for record in st.session_state.screening_history[-10:]:  # 显示最近10条
+                date_str = record.get('date', '')
+                count = record.get('count', 0)
+                st.caption(f"{date_str} ({count}只)")
+        else:
+            st.caption("暂无历史记录")
+        
+        # 帮助按钮
+        if st.button("❓ 帮助", use_container_width=True):
+            st.info("""
+            **筛选规则：**
+            1. 审计意见：近5年全部标准无保留
+            2. 现金流：≥0 且 ≥净利润
+            3. 估值：PR ≤ 设定值
+            4. ROE：≥ 设定值
+            """)
+
+    # 主显示区
+    st.title("🌐 全网智能筛选")
+    
+    # 第一步：获取股票列表
+    st.subheader("📋 第一步：获取股票列表")
+    
+    if st.session_state.stock_list is None:
+        if st.button("🚀 获取全部A股股票列表", type="primary", use_container_width=True):
+            with st.spinner("正在获取股票列表..."):
+                try:
+                    screener = StockScreener()
+                    stock_list = screener.get_a_stock_list(exclude_st=True)
+                    st.session_state.stock_list = stock_list
+                    st.success(f"✅ 成功获取 {len(stock_list)} 只A股股票（已排除ST股）")
+                    st.info("💡 股票列表已缓存，可以开始筛选")
+                except Exception as e:
+                    st.error(f"❌ 获取股票列表失败：{e}")
+                    if st.session_state.debug_mode:
+                        st.exception(e)
+    else:
+        stock_list = st.session_state.stock_list
+        st.success(f"✅ 已缓存 {len(stock_list)} 只A股股票")
+        
+        # 显示前10只股票作为预览
+        with st.expander("📊 股票列表预览（前10只）", expanded=False):
+            preview_df = stock_list.head(10)[['ts_code', 'name', 'area', 'industry']]
+            st.dataframe(preview_df, use_container_width=True, hide_index=True)
+        
+        if st.button("🔄 重新获取股票列表", use_container_width=True):
+            st.session_state.stock_list = None
+            st.rerun()
+    
+    st.divider()
+    
+    # 第二步：开始筛选（如果股票列表已获取）
+    if st.session_state.stock_list is not None:
+        st.subheader("🔍 第二步：开始筛选")
+        
+        stock_list = st.session_state.stock_list
+        total_stocks = len(stock_list)
+        
+        # 计算年份范围
+        end_year = datetime.now().year - 1
+        start_year = end_year - years + 1
+        
+        # 显示筛选参数
+        st.info(f"📊 筛选参数：年数={years}年（{start_year}-{end_year}），ROE≥{min_roe}%，PR≤{max_pr}")
+        
+        # 开始筛选按钮
+        if not st.session_state.screening_in_progress:
+            if st.button("🚀 开始全网筛选", type="primary", use_container_width=True):
+                # 初始化筛选状态
+                st.session_state.screening_in_progress = True
+                st.session_state.screening_results = []
+                st.session_state.screening_progress = {
+                    'processed': 0,
+                    'total': total_stocks,
+                    'passed': 0,
+                    'failed': 0,
+                    'current_index': 0
+                }
+                st.rerun()
+        else:
+            # 筛选进行中，显示进度
+            progress = st.session_state.screening_progress
+            processed = progress['processed']
+            total = progress['total']
+            passed = progress['passed']
+            failed = progress['failed']
+            
+            # 进度条
+            if total > 0:
+                progress_value = processed / total
+                st.progress(progress_value)
+                st.caption(f"📊 进度：{processed}/{total} ({progress_value*100:.2f}%) | ✅ 通过：{passed} | ❌ 失败：{failed}")
+            
+            # 处理股票（每次刷新处理一只）
+            screener = StockScreener()  # 使用全局导入的StockScreener
+            stock_list = st.session_state.stock_list
+            current_index = progress.get('current_index', 0)
+            
+            # 处理全部股票（不是测试模式）
+            if current_index < total_stocks:
+                # 还有股票需要处理
+                stock_row = stock_list.iloc[current_index]
+                ts_code = stock_row['ts_code']
+                stock_name = stock_row['name']
+                
+                st.info(f"🔄 正在处理：{ts_code} ({stock_name}) [{current_index + 1}/{total_stocks}]")
+                
+                try:
+                    # 调用深度分析
+                    result = analyze_fundamentals(
+                        ts_code=ts_code,
+                        start_date=f"{start_year}0101",
+                        end_date=f"{end_year}1231",
+                        years=years,
+                        use_cache=True,
+                        api_delay=api_delay
+                    )
+                    
+                    if result:
+                        audit_records = result.get('audit_records', [])
+                        metrics = result.get('metrics')
+                        
+                        if metrics is not None and not metrics.empty:
+                            # 检查基本面
+                            fundamentals_pass, fundamentals_details = screener.check_fundamentals_pass(
+                                audit_records, metrics
+                            )
+                            
+                            if fundamentals_pass:
+                                # 基本面通过，检查估值
+                                valuation_pass, valuation_details = screener.check_valuation_pass(
+                                    ts_code=ts_code,
+                                    pr_threshold=max_pr,
+                                    min_roe=min_roe
+                                )
+                                
+                                if valuation_pass:
+                                    # 通过所有筛选，添加到结果
+                                    stock_result = {
+                                        'ts_code': ts_code,
+                                        'name': stock_name,
+                                        'fundamentals_details': fundamentals_details,
+                                        'valuation_details': valuation_details
+                                    }
+                                    st.session_state.screening_results.append(stock_result)
+                                    st.session_state.screening_progress['passed'] += 1
+                                else:
+                                    st.session_state.screening_progress['failed'] += 1
+                            else:
+                                st.session_state.screening_progress['failed'] += 1
+                        else:
+                            st.session_state.screening_progress['failed'] += 1
+                    else:
+                        st.session_state.screening_progress['failed'] += 1
+                    
+                    # 更新进度
+                    st.session_state.screening_progress['processed'] = current_index + 1
+                    st.session_state.screening_progress['current_index'] = current_index + 1
+                    
+                    # 继续处理下一只（自动刷新）
+                    time.sleep(0.5)  # 短暂延迟，让用户看到进度
+                    st.rerun()
+                    
+                except Exception as e:
+                    # 处理失败
+                    st.session_state.screening_progress['failed'] += 1
+                    st.session_state.screening_progress['processed'] = current_index + 1
+                    st.session_state.screening_progress['current_index'] = current_index + 1
+                    if st.session_state.debug_mode:
+                        st.warning(f"处理 {ts_code} 失败：{e}")
+                    time.sleep(0.5)
+                    st.rerun()
+            else:
+                # 所有股票处理完成
+                st.session_state.screening_in_progress = False
+                final_passed = st.session_state.screening_progress['passed']
+                final_processed = st.session_state.screening_progress['processed']
+                st.success(f"✅ 筛选完成！处理了 {final_processed} 只股票，通过 {final_passed} 只")
+                
+                # 如果有结果，按PR排序（从低到高）
+                if st.session_state.screening_results:
+                    st.session_state.screening_results.sort(
+                        key=lambda x: x.get('valuation_details', {}).get('final_pr', float('inf'))
+                    )
+                    st.info(f"📊 结果已按修正市赚率（PR）从低到高排序")
+            
+            # 停止按钮
+            if st.button("⏹️ 停止筛选", use_container_width=True):
+                st.session_state.screening_in_progress = False
+                st.warning("⏸️ 筛选已停止")
+                st.rerun()
+    
+    # 结果展示区域
+    if st.session_state.screening_results:
+        st.divider()
+        st.subheader("📊 筛选结果")
+        st.info(f"✅ 共找到 {len(st.session_state.screening_results)} 只符合条件的股票（已按PR从低到高排序）")
+        
+        # 构建表格数据
+        table_data = []
+        for i, stock in enumerate(st.session_state.screening_results, 1):
+            valuation = stock.get('valuation_details', {})
+            fundamentals = stock.get('fundamentals_details', {})
+            
+            # 获取PR值（修正PR优先，如果没有则用标准PR）
+            final_pr = valuation.get('final_pr')
+            if final_pr is None:
+                final_pr = valuation.get('standard_pr')
+            
+            table_data.append({
+                '排名': i,
+                '代码': stock['ts_code'],
+                '名称': stock.get('name', '未知'),
+                'PR': f"{final_pr:.4f}" if final_pr is not None else "-",
+                'ROE(%)': f"{valuation.get('roe_waa', 0):.2f}" if valuation.get('roe_waa') is not None else "-",
+                'PE(TTM)': f"{valuation.get('pe_ttm', 0):.2f}" if valuation.get('pe_ttm') is not None else "-",
+                '审计通过': "✅" if fundamentals.get('audit_pass', False) else "❌",
+                '现金流通过': "✅" if fundamentals.get('cashflow_pass', False) else "❌",
+            })
+        
+        df_results = pd.DataFrame(table_data)
+        st.dataframe(df_results, use_container_width=True, hide_index=True)
+        
+        # 导出按钮
+        csv = df_results.to_csv(index=False, encoding='utf-8-sig')
+        st.download_button(
+            label="📥 导出CSV",
+            data=csv,
+            file_name=f"全网筛选结果_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime='text/csv'
+        )
+
+def page_full_market_screening_old():
+    """旧版本（已废弃，保留作为参考）"""
+    pass
+
 def page_history():
     """历史记录页面"""
     st.header("🕘 历史记录")
-    
+
     history = HistoryManager.load_history()
-    
+
     if not history:
         st.info("📭 暂无历史记录")
         return
-    
+
     for record in history[:50]:
         time = record.get('time', '')
         code = record.get('code', '')
         sector = record.get('sector', '')
         avg_score = record.get('avg_score', 0)
         icon = "🟢" if avg_score >= 2.5 else "🟡" if avg_score >= 2.0 else "🟠"
-        
+
         with st.expander(f"{icon} {time} - {code} ({sector}) - 得分: {avg_score:.2f}", expanded=False):
             col1, col2, col3 = st.columns(3)
             col1.write(f"**代码：** {code}")
             col2.write(f"**行业：** {sector}")
             col3.write(f"**年限：** {record.get('year_range', '未知')}")
-            
+
             col1, col2 = st.columns(2)
             col1.write(f"**平均分：** {avg_score:.2f}/3.00")
             col2.write(f"**红旗数：** {record.get('red_flags', 0)}年")
@@ -904,6 +1825,115 @@ def page_history():
 
 def main():
     """主函数"""
+    # 积分信息显示（页面顶部）- 按照Tushare文档格式显示
+    # 使用缓存避免频繁查询（积分信息变化不频繁，每天最多50次查询限制）
+    cache_key = 'user_points_info'
+    cache_time_key = 'user_points_info_time'
+    
+    # 检查缓存（10分钟有效）
+    points_info = None
+    if cache_key in st.session_state and cache_time_key in st.session_state:
+        cache_time = st.session_state[cache_time_key]
+        if time.time() - cache_time < 600:  # 10分钟内使用缓存
+            points_info = st.session_state[cache_key]
+    
+    # 如果缓存不存在或过期，重新查询
+    if points_info is None:
+        try:
+            points_info = get_user_points_info()
+            # 保存到缓存
+            if points_info:
+                st.session_state[cache_key] = points_info
+                st.session_state[cache_time_key] = time.time()
+        except Exception as e:
+            # 如果查询失败，尝试使用缓存（即使过期）
+            if cache_key in st.session_state:
+                points_info = st.session_state[cache_key]
+            if st.session_state.debug_mode:
+                st.warning(f"无法获取积分信息: {e}")
+    
+    # 显示积分信息（在页面最顶部）
+    if points_info:
+        # 显示总积分和到期信息（简洁版，在页面顶部）
+        st.markdown("### 💰 Tushare积分信息")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("总积分", f"{points_info['total_points']:.0f}")
+        
+        with col2:
+            if points_info.get('nearest_expiry_date'):
+                # 计算距离到期的天数
+                expiry_date = datetime.strptime(points_info['nearest_expiry_date'], '%Y-%m-%d')
+                days_left = (expiry_date - datetime.now()).days
+                st.metric(
+                    "最近到期时间",
+                    points_info['nearest_expiry_date'],
+                    delta=f"{days_left}天后到期" if days_left > 0 else "已过期" if days_left < 0 else "今日到期"
+                )
+            else:
+                st.metric("最近到期时间", "未知")
+        
+        with col3:
+            if points_info.get('nearest_expiry_date'):
+                st.metric("到期积分", f"{points_info['nearest_expiry_points']:.0f}")
+            else:
+                st.metric("到期积分", "0")
+        
+        # 展开显示详细到期记录表格（按照第三张图片的格式）
+        with st.expander("📋 查看详细到期记录", expanded=False):
+            if points_info.get('expiry_records'):
+                st.caption("💡 账户的总积分，用户可以登录tushare pro，在个人主页里可以查看到")
+                
+                # 创建到期记录表格
+                expiry_df = pd.DataFrame(points_info['expiry_records'])
+                
+                # 确保列名正确（Tushare API返回的字段名）
+                required_cols = []
+                if '到期时间' in expiry_df.columns:
+                    required_cols.append('到期时间')
+                elif 'expiry_date' in expiry_df.columns:
+                    expiry_df['到期时间'] = expiry_df['expiry_date']
+                    required_cols.append('到期时间')
+                
+                if '到期积分' in expiry_df.columns:
+                    required_cols.append('到期积分')
+                elif 'expiry_points' in expiry_df.columns:
+                    expiry_df['到期积分'] = expiry_df['expiry_points']
+                    required_cols.append('到期积分')
+                
+                if len(required_cols) == 2:
+                    # 格式化日期显示
+                    expiry_df['到期时间'] = pd.to_datetime(expiry_df['到期时间']).dt.strftime('%Y-%m-%d')
+                    expiry_df['到期积分'] = expiry_df['到期积分'].apply(lambda x: f"{float(x):.4f}" if pd.notna(x) else "0.0000")
+                    
+                    # 只显示需要的列
+                    display_df = expiry_df[['到期时间', '到期积分']].copy()
+                    
+                    # 按到期时间排序（最近的在前）
+                    display_df = display_df.sort_values('到期时间').reset_index(drop=True)
+                    
+                    # 显示表格（按照第三张图片的格式）
+                    st.dataframe(
+                        display_df,
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={
+                            "到期时间": st.column_config.TextColumn("到期时间", width="medium"),
+                            "到期积分": st.column_config.TextColumn("到期积分", width="medium")
+                        }
+                    )
+                else:
+                    st.warning(f"⚠️ 积分数据格式异常，缺少必需字段。可用字段：{list(expiry_df.columns)}")
+            else:
+                st.caption("暂无积分到期记录")
+        
+        st.divider()
+    else:
+        # 查询失败，显示提示
+        if st.session_state.debug_mode:
+            st.warning("⚠️ 无法获取积分信息（可能达到API调用限制，每天最多50次）")
+    
     st.title("📊 A股财务分析系统")
     st.markdown("*基于审计意见与三大核心指标的智能筛选*")
     
@@ -936,23 +1966,36 @@ def main():
         st.markdown("### 📊 分析参数")
         col1, col2 = st.columns(2)
         with col1:
-            st.session_state.start_year = st.number_input(
+            new_start_year = st.number_input(
                 "开始年",
-                min_value=1990,
-                max_value=2100,
+                min_value=1900,
+                max_value=2999,
                 value=st.session_state.start_year,
                 step=1,
-                help="可自由输入任何年份"
+                help="可自由输入任何年份（1900-2999）",
+                key="start_year_input"
             )
+            # 如果年份发生变化，更新session_state
+            if new_start_year != st.session_state.start_year:
+                st.session_state.start_year = new_start_year
+                st.info(f"✅ 开始年已更新为：{new_start_year}")
         with col2:
-            st.session_state.end_year = st.number_input(
+            new_end_year = st.number_input(
                 "结束年",
-                min_value=1990,
-                max_value=2100,
+                min_value=1900,
+                max_value=2999,
                 value=st.session_state.end_year,
                 step=1,
-                help="可自由输入任何年份"
+                help="可自由输入任何年份（1900-2999）",
+                key="end_year_input"
             )
+            # 如果年份发生变化，更新session_state
+            if new_end_year != st.session_state.end_year:
+                st.session_state.end_year = new_end_year
+                st.info(f"✅ 结束年已更新为：{new_end_year}")
+        
+        # 显示当前设置的年份范围
+        st.caption(f"📅 当前查询年份范围：{st.session_state.start_year}年 - {st.session_state.end_year}年")
         
         st.session_state.ocf_consecutive_years = st.slider(
             "OCF连续为正年数要求",
@@ -1043,12 +2086,18 @@ def main():
         )
     
     # 主内容区 - 标签页
-    tab1, tab2 = st.tabs(["🔎 单项分析", "🕘 历史记录"])
-    
+    tab1, tab2, tab3, tab4 = st.tabs(["🔎 单项分析", "💰 市赚率估值", "🌐 全网筛选", "🕘 历史记录"])
+
     with tab1:
         page_single_analysis()
-    
+
     with tab2:
+        page_pr_valuation()
+
+    with tab3:
+        page_full_market_screening()
+
+    with tab4:
         page_history()
 
 

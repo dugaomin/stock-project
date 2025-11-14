@@ -1,6 +1,13 @@
-# A股财务分析系统
+# 📊 A股财务分析系统
 
-基于审计意见与三大核心指标的智能筛选系统
+> 基于审计意见与三大核心指标的智能筛选系统  
+> 5分钟快速评估公司财务健康状况，小白也能看懂！
+
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+[在线演示](#) | [使用指南](使用指南.md) | [开发文档](开发文档.md)
 
 ## 📊 功能特点
 

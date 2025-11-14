@@ -32,6 +32,11 @@ data/analysis_history.json
 
 # 敏感信息 - 不要上传真实Token！
 settings.py
+settings_temp.py
+*.key
+*.pem
+.env
+.env.local
 
 # Temporary files
 *.tmp
