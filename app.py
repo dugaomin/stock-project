@@ -26,7 +26,7 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime
 from typing import Optional
-from utils import analyze_fundamentals, run_connectivity_tests, fetch_valuation_data, get_user_points_info
+from utils import analyze_fundamentals, run_connectivity_tests, fetch_valuation_data, get_user_points_info, calculate_recent_years
 import json
 import os
 import plotly.graph_objects as go
@@ -36,6 +36,7 @@ from valuation import PRValuation
 from screening import run_full_market_screening, StockScreener
 import threading
 import time
+from constants import SECTOR_RULES
 
 # 页面配置
 st.set_page_config(
@@ -67,11 +68,11 @@ def normalize_ts_code(raw_code: str, target_type: str) -> str:
     """
     规范化股票/指数代码，自动补全交易所后缀
     
-    Args:
+    参数:
         raw_code: 用户输入的原始代码
         target_type: 标的类型（个股/宽基指数）
         
-    Returns:
+    返回:
         带有交易所后缀的标准代码
     """
     if not raw_code:
@@ -102,60 +103,16 @@ def normalize_ts_code(raw_code: str, target_type: str) -> str:
         return f"{code}.SZ"
     
     return code
-SECTOR_RULES = {
-    "地产": {
-        "name": "地产",
-        "debt_ratio_max": 60.0,
-        "gross_margin_min": 15.0,
-        "description": "地产行业资产负债率<60%较健康"
-    },
-    "科技": {
-        "name": "科技",
-        "debt_ratio_max": 50.0,
-        "gross_margin_min": 30.0,
-        "description": "科技行业资产负债率>50%需警惕"
-    },
-    "消费": {
-        "name": "消费",
-        "debt_ratio_max": 40.0,
-        "gross_margin_min": 40.0,
-        "description": "消费行业越低越安全，毛利率<40%需警惕"
-    },
-    "制造业": {
-        "name": "制造业",
-        "debt_ratio_max": 60.0,
-        "gross_margin_min": 25.0,
-        "description": "制造业毛利率25%就可能很优秀"
-    },
-    "品牌/平台": {
-        "name": "品牌/平台",
-        "debt_ratio_max": 40.0,
-        "gross_margin_min": 60.0,
-        "description": "品牌溢价强，通常毛利率更高（60%+）"
-    },
-    "金融": {
-        "name": "金融",
-        "debt_ratio_max": 90.0,
-        "gross_margin_min": 20.0,
-        "description": "金融行业特殊，负债率高属正常"
-    },
-    "其他": {
-        "name": "其他",
-        "debt_ratio_max": 60.0,
-        "gross_margin_min": 15.0,
-        "description": "通用标准"
-    }
-}
+
 
 # 初始化会话状态
 if 'debug_mode' not in st.session_state:
     st.session_state.debug_mode = False
-if 'start_year' not in st.session_state:
-    st.session_state.start_year = 2018
-if 'end_year' not in st.session_state:
-    # 自动设置为去年（最新完整年份）
-    current_year = datetime.now().year
-    st.session_state.end_year = current_year - 1
+if 'start_year' not in st.session_state or 'end_year' not in st.session_state:
+    # 使用智能年份计算：根据当前月份判断最近5年
+    start_year, end_year = calculate_recent_years(required_years=5)
+    st.session_state.start_year = start_year
+    st.session_state.end_year = end_year
 if 'selected_sector' not in st.session_state:
     st.session_state.selected_sector = "消费"
 if 'ocf_consecutive_years' not in st.session_state:
@@ -208,10 +165,10 @@ def format_percentage(value: float) -> str:
     """
     将小数格式化为百分比字符串
     
-    Args:
+    参数:
         value: 小数值（如0.6表示60%）
         
-    Returns:
+    返回:
         格式化后的百分比字符串（如"60.00%"），数据缺失返回"-"
     """
     if value is None or pd.isna(value):
@@ -228,13 +185,13 @@ def format_metric_value(
     """
     安全格式化数值，避免None或NaN导致的格式化报错
     
-    Args:
+    参数:
         value: 数值
         spec: 格式化规格（例如'.2f'）
         suffix: 追加的单位（例如'元'、'%'）
         default: 缺失数据时返回的字符串
         
-    Returns:
+    返回:
         格式化后的字符串
     """
     if value is None:
@@ -265,11 +222,11 @@ def evaluate_year(row, sector_rules) -> dict:
         - 毛利率达标：+1分
         - 经营现金流为正：+1分
     
-    Args:
+    参数:
         row: DataFrame的一行数据，包含财务指标
         sector_rules: 行业评分标准字典
         
-    Returns:
+    返回:
         (年度得分, 各项检查结果字典)
     """
     score = 0
@@ -312,11 +269,11 @@ def check_ocf_consecutive(metrics: pd.DataFrame, k: int) -> tuple:
     
     核心问题：连续k年（通常3-5年）经营现金流为正吗？
     
-    Args:
+    参数:
         metrics: 财务指标DataFrame
         k: 要求的连续年数
         
-    Returns:
+    返回:
         (是否连续k年为正, 为正年数, 现金流≥利润年数, 总年数, 最长连续年数)
     """
     consecutive = 0
@@ -432,6 +389,13 @@ def render_core_indicators(metrics: pd.DataFrame, evaluation: dict, sector_rules
         st.warning("⚠️ 未获取到财务数据")
         return
     
+    # 重要：确保只使用年度数据（end_date以1231结尾），过滤掉可能的季度数据
+    if not metrics.empty and 'end_date' in metrics.columns:
+        before_filter = len(metrics)
+        metrics = metrics[metrics['end_date'].astype(str).str.endswith('1231')].copy()
+        if before_filter != len(metrics):
+            st.warning(f"⚠️ 检测到季度数据：从{before_filter}条记录过滤到{len(metrics)}条年度记录（只保留end_date以1231结尾的数据）")
+    
     # 获取最新年份数据
     latest = metrics.iloc[-1]
     
@@ -509,7 +473,22 @@ def render_year_health_table(metrics: pd.DataFrame, evaluation: dict, sector_rul
         st.warning("⚠️ 无财务数据")
         return
     
-    st.caption(f"共分析 {len(metrics)} 个年度数据（最新年份在上方）")
+    # 重要：确保只使用年度数据（end_date以1231结尾），过滤掉可能的季度数据
+    if not metrics.empty and 'end_date' in metrics.columns:
+        before_filter = len(metrics)
+        metrics = metrics[metrics['end_date'].astype(str).str.endswith('1231')].copy()
+        if before_filter != len(metrics):
+            st.warning(f"⚠️ 检测到季度数据：从{before_filter}条记录过滤到{len(metrics)}条年度记录（只保留end_date以1231结尾的数据）")
+    
+    # 显示年份范围和实际数据年份（显示所有获取到的数据）
+    if not metrics.empty:
+        actual_years = sorted([row['end_date'][:4] for _, row in metrics.iterrows()])
+        st.info(f"📊 共获取到 {len(metrics)} 个年度数据：{', '.join(actual_years)}（最新年份在上方）")
+        # 如果数据少于期望的5年，给出提示
+        if len(metrics) < 5:
+            st.caption(f"💡 提示：默认查询最近5年数据，但该股票只有{len(metrics)}年数据。如需更多数据，可调整年份范围重新查询。")
+    else:
+        st.caption(f"共分析 {len(metrics)} 个年度数据（最新年份在上方）")
     
     # 按年份倒序显示（最新的在上面）
     # metrics 已经是按 end_date 降序排列的，所以直接正序遍历即可
@@ -519,17 +498,17 @@ def render_year_health_table(metrics: pd.DataFrame, evaluation: dict, sector_rul
         checks = evaluation['year_checks'][idx]
         score = evaluation['scores'][idx]
         
-        # 创建一个容器
+        # 创建一个容器（优化显示比例）
         with st.container():
-            # 年份和得分
-            col_year, col_score = st.columns([1, 3])
+            # 年份和得分（优化比例：年份占更大比例，更清晰）
+            col_year, col_score = st.columns([2, 3])
             with col_year:
                 st.markdown(f"### {year}")
             with col_score:
                 score_dots = "🟢" * score + "⚪" * (3 - score)
                 st.markdown(f"**年度得分：** {score}/3 {score_dots}")
             
-            # 三个指标横向排列
+            # 三个指标横向排列（等宽，更美观）
             cols = st.columns(3)
             
             with cols[0]:
@@ -590,7 +569,29 @@ def render_health_charts(metrics: pd.DataFrame):
         return
     
     # 准备数据
-    years = [row['end_date'][:4] for _, row in metrics.iterrows()]
+    # 重要：确保只使用年度数据（end_date以1231结尾），过滤掉可能的季度数据
+    if not metrics.empty and 'end_date' in metrics.columns:
+        before_filter = len(metrics)
+        # 确保end_date是字符串类型
+        metrics['end_date'] = metrics['end_date'].astype(str)
+        metrics = metrics[metrics['end_date'].str.endswith('1231')].copy()
+        if before_filter != len(metrics):
+            st.warning(f"⚠️ 检测到季度数据：从{before_filter}条记录过滤到{len(metrics)}条年度记录（只保留end_date以1231结尾的数据）")
+    
+    if metrics.empty:
+        st.warning("⚠️ 过滤后无年度数据")
+        return
+    
+    # 重要：确保每个年份只有一条记录（按end_date去重，保留最新的）
+    # 虽然已经过滤了季度数据，但为了保险起见，再次去重
+    if not metrics.empty:
+        # 按end_date去重，保留每个年份的最后一条记录（最新的）
+        metrics = metrics.drop_duplicates(subset='end_date', keep='last').sort_values('end_date').reset_index(drop=True)
+        print(f"🔍 图表生成：使用{len(metrics)}条年度数据，年份：{[row['end_date'][:4] for _, row in metrics.iterrows()]}")
+    
+    # 使用过滤后的年度数据生成图表
+    # 使用整数年份作为X轴，避免Plotly自动处理重复值
+    years = [int(row['end_date'][:4]) for _, row in metrics.iterrows()]
     debt_ratios = [row['debt_ratio'] * 100 if pd.notna(row['debt_ratio']) else None for _, row in metrics.iterrows()]
     gross_margins = [row['gross_margin'] * 100 if pd.notna(row['gross_margin']) else None for _, row in metrics.iterrows()]
     ocfs = [row['n_cashflow_act'] / 100000000 if pd.notna(row['n_cashflow_act']) else None for _, row in metrics.iterrows()]
@@ -639,10 +640,12 @@ def render_health_charts(metrics: pd.DataFrame):
     )
     
     # 更新布局
-    fig.update_xaxes(title_text="年份", row=1, col=1)
-    fig.update_xaxes(title_text="年份", row=1, col=2)
-    fig.update_xaxes(title_text="年份", row=2, col=1)
-    fig.update_xaxes(title_text="年份", row=2, col=2)
+    # 重要：设置X轴为整数年份，避免显示小数（如2023.2, 2023.4）
+    # 使用线性类型，每年一个刻度，确保只显示整数年份
+    fig.update_xaxes(title_text="年份", type='linear', tickmode='linear', dtick=1, row=1, col=1)
+    fig.update_xaxes(title_text="年份", type='linear', tickmode='linear', dtick=1, row=1, col=2)
+    fig.update_xaxes(title_text="年份", type='linear', tickmode='linear', dtick=1, row=2, col=1)
+    fig.update_xaxes(title_text="年份", type='linear', tickmode='linear', dtick=1, row=2, col=2)
     
     fig.update_yaxes(title_text="资产负债率(%)", row=1, col=1)
     fig.update_yaxes(title_text="毛利率(%)", row=1, col=2)
@@ -658,6 +661,13 @@ def render_detailed_table(metrics: pd.DataFrame, evaluation: dict):
     """渲染详细财务数据表"""
     if metrics.empty:
         return
+    
+    # 重要：确保只使用年度数据（end_date以1231结尾），过滤掉可能的季度数据
+    if not metrics.empty and 'end_date' in metrics.columns:
+        before_filter = len(metrics)
+        metrics = metrics[metrics['end_date'].astype(str).str.endswith('1231')].copy()
+        if before_filter != len(metrics):
+            st.warning(f"⚠️ 检测到季度数据：从{before_filter}条记录过滤到{len(metrics)}条年度记录（只保留end_date以1231结尾的数据）")
     
     with st.expander("📋 详细财务数据表", expanded=False):
         display_data = []
@@ -767,11 +777,17 @@ def page_single_analysis():
             progress_bar.progress(value)
         
         try:
+            # 从session_state获取积分信息（避免重复调用API）
+            user_points = None
+            if 'user_points_info' in st.session_state and st.session_state.user_points_info:
+                user_points = st.session_state.user_points_info.get('total_points', 2000)
+            
             result = analyze_fundamentals(
                 ts_code, start_date, end_date, 
                 use_cache=True,
                 api_delay=st.session_state.api_delay,
-                progress_callback=update_progress
+                progress_callback=update_progress,
+                user_points=user_points  # 传入积分信息，避免重复调用API
             )
             
             progress_bar.empty()
@@ -871,6 +887,12 @@ def page_single_analysis():
         audit_records = result.get("audit_records", [])
         metrics = result.get("metrics", None)
         
+        # 调试信息：显示实际获取到的数据年份
+        if metrics is not None and not metrics.empty:
+            actual_years = sorted([row['end_date'][:4] for _, row in metrics.iterrows()])
+            if st.session_state.debug_mode:
+                st.info(f"🔍 调试信息：实际获取到 {len(metrics)} 年数据，年份：{', '.join(actual_years)}")
+        
         # 检查是否有数据
         if metrics is None or metrics.empty:
             st.error("❌ 未获取到财务数据")
@@ -940,6 +962,16 @@ def page_single_analysis():
         render_audit_opinion(audit_records)
         
         st.divider()
+        
+        # 重要：在显示前统一过滤，确保只使用年度数据（end_date以1231结尾）
+        if not metrics.empty and 'end_date' in metrics.columns:
+            before_filter = len(metrics)
+            metrics['end_date'] = metrics['end_date'].astype(str)
+            metrics = metrics[metrics['end_date'].str.endswith('1231')].copy()
+            if before_filter != len(metrics):
+                st.warning(f"⚠️ 检测到季度数据：从{before_filter}条记录过滤到{len(metrics)}条年度记录（只保留end_date以1231结尾的数据）")
+                # 重新评估（因为数据量变了）
+                evaluation = evaluate_metrics(metrics, sector_rules, st.session_state.ocf_consecutive_years)
         
         # 2. 三大核心指标
         render_core_indicators(metrics, evaluation, sector_rules)
@@ -1490,7 +1522,10 @@ def page_full_market_screening():
             'total': 0,
             'passed': 0,
             'failed': 0,
-            'current_index': 0  # 当前处理的股票索引
+            'current_index': 0,  # 当前处理的股票索引
+            'start_time': datetime.now(),  # 记录开始时间
+            'last_update_time': datetime.now(),  # 记录最后更新时间
+            'time_records': []  # 记录每只股票的耗时
         }
     if 'screening_history' not in st.session_state:
         st.session_state.screening_history = []  # 筛选历史记录
@@ -1532,22 +1567,54 @@ def page_full_market_screening():
         # 高级设置
         st.subheader("🔧 高级设置")
         
+        # 显示当前用户积分等级和API延迟规则
+        try:
+            from utils import get_api_delay
+            # 从session_state读取积分信息（避免重复调用API）
+            points_info = st.session_state.get('user_points_info', None)
+            if points_info:
+                user_points = points_info.get('total_points', 2000)
+                # 显示积分等级
+                if user_points < 120:
+                    level = "免费用户"
+                    financial_delay = get_api_delay('fina_audit', user_points)
+                elif user_points < 600:
+                    level = "注册用户"
+                    financial_delay = get_api_delay('fina_audit', user_points)
+                elif user_points < 5000:
+                    level = "中级用户"
+                    financial_delay = get_api_delay('fina_audit', user_points)
+                else:
+                    level = "高级用户"
+                    financial_delay = get_api_delay('fina_audit', user_points)
+                
+                # 显示单线程和多线程的延迟差异
+                single_thread_delay = get_api_delay('fina_audit', user_points, max_workers=1)
+                multi_thread_delay = get_api_delay('fina_audit', user_points, max_workers=max_workers)
+                company_delay = get_api_delay('stock_company', user_points, max_workers=max_workers)
+                st.info(f"💰 当前积分：{user_points:.0f}分（{level}）| 财务API延迟：{multi_thread_delay:.2f}秒/次（{max_workers}线程）| 公司信息API延迟：{company_delay:.2f}秒/次")
+                st.caption(f"💡 说明：财务API单线程延迟={single_thread_delay:.2f}秒/次，{max_workers}线程并发时延迟={multi_thread_delay:.2f}秒/次（全局限制：每分钟200次）")
+            else:
+                st.info("💰 无法获取积分信息，使用默认延迟设置（中级用户：3秒/次）")
+        except:
+            st.info("💰 使用默认延迟设置（中级用户：3秒/次）")
+        
         api_delay = st.number_input(
-            "API间隔 (秒)",
+            "额外API延迟 (秒)",
             min_value=0.0,
-            max_value=5.0,
-            value=0.5,
+            max_value=10.0,
+            value=0.0,  # 默认0秒，使用API规则自动计算的延迟
             step=0.1,
-            help="API调用之间的延迟时间"
+            help="在API规则延迟基础上额外增加的延迟（可选，用于更保守的调用策略）"
         )
         
         max_workers = st.number_input(
             "线程数",
             min_value=1,
-            max_value=8,
-            value=4,
+            max_value=20,  # 优化：提高最大值到20，支持更高并发
+            value=10,  # 优化：默认10线程，加速筛选（从4提升到10）
             step=1,
-            help="并发处理线程数"
+            help="并发处理线程数（建议：中级用户10，高级用户20）"
         )
         
         # 历史记录
@@ -1612,12 +1679,11 @@ def page_full_market_screening():
         stock_list = st.session_state.stock_list
         total_stocks = len(stock_list)
         
-        # 计算年份范围
-        end_year = datetime.now().year - 1
-        start_year = end_year - years + 1
+        # 使用智能年份计算：根据当前月份和年报发布时间判断最近N年
+        start_year, end_year = calculate_recent_years(required_years=years)
         
         # 显示筛选参数
-        st.info(f"📊 筛选参数：年数={years}年（{start_year}-{end_year}），ROE≥{min_roe}%，PR≤{max_pr}")
+        st.info(f"📊 筛选参数：年份范围={start_year}年-{end_year}年（智能计算最近{years}年数据），ROE≥{min_roe}%，PR≤{max_pr}")
         
         # 开始筛选按钮
         if not st.session_state.screening_in_progress:
@@ -1625,12 +1691,16 @@ def page_full_market_screening():
                 # 初始化筛选状态
                 st.session_state.screening_in_progress = True
                 st.session_state.screening_results = []
+                start_time = datetime.now()  # 记录开始时间
                 st.session_state.screening_progress = {
                     'processed': 0,
                     'total': total_stocks,
                     'passed': 0,
                     'failed': 0,
-                    'current_index': 0
+                    'current_index': 0,
+                    'start_time': start_time,  # 记录开始时间
+                    'last_update_time': start_time,  # 记录最后更新时间
+                    'time_records': []  # 记录每只股票的耗时
                 }
                 st.rerun()
         else:
@@ -1640,12 +1710,116 @@ def page_full_market_screening():
             total = progress['total']
             passed = progress['passed']
             failed = progress['failed']
+            start_time = progress.get('start_time')
+            if start_time is None:
+                start_time = datetime.now()
+                st.session_state.screening_progress['start_time'] = start_time
             
-            # 进度条
+            last_update_time = progress.get('last_update_time', start_time)
+            time_records = progress.get('time_records', [])
+            
+            # 计算时间信息
+            current_time = datetime.now()
+            elapsed_time = (current_time - start_time).total_seconds()  # 已用时间（秒）
+            
+            # 计算平均每只股票耗时
+            avg_time_per_stock = 0
+            if processed > 0:
+                avg_time_per_stock = elapsed_time / processed
+            
+            # 预估剩余时间
+            remaining_stocks = total - processed
+            estimated_remaining_time = 0
+            if processed > 0 and remaining_stocks > 0:
+                estimated_remaining_time = avg_time_per_stock * remaining_stocks
+            
+            # 格式化时间显示
+            def format_time(seconds):
+                """格式化时间显示"""
+                if seconds < 60:
+                    return f"{int(seconds)}秒"
+                elif seconds < 3600:
+                    minutes = int(seconds // 60)
+                    secs = int(seconds % 60)
+                    return f"{minutes}分{secs}秒"
+                else:
+                    hours = int(seconds // 3600)
+                    minutes = int((seconds % 3600) // 60)
+                    secs = int(seconds % 60)
+                    return f"{hours}小时{minutes}分{secs}秒"
+            
+            # 美化UI：时间信息卡片
+            st.markdown("---")
+            st.markdown("### ⏱️ 时间统计")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("🕐 开始时间", start_time.strftime("%H:%M:%S"))
+            with col2:
+                st.metric("⏱️ 已用时间", format_time(elapsed_time))
+            with col3:
+                st.metric("📊 平均耗时", f"{avg_time_per_stock:.2f}秒/只" if avg_time_per_stock > 0 else "计算中...")
+            with col4:
+                st.metric("⏳ 预估剩余", format_time(estimated_remaining_time) if estimated_remaining_time > 0 else "计算中...")
+            
+            # 美化UI：进度条和进度信息（使用卡片样式）
             if total > 0:
                 progress_value = processed / total
+                
+                # 进度卡片容器
+                st.markdown("---")
+                st.markdown("### 📊 筛选进度")
+                
+                # 使用自定义样式美化进度条区域
+                progress_html = f"""
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                            padding: 20px; 
+                            border-radius: 10px; 
+                            margin: 10px 0;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <div style="background-color: rgba(255, 255, 255, 0.1); 
+                                border-radius: 8px; 
+                                padding: 15px; 
+                                margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="color: white; font-size: 16px; font-weight: bold;">总体进度</span>
+                            <span style="color: white; font-size: 18px; font-weight: bold;">{progress_value*100:.2f}%</span>
+                        </div>
+                        <div style="background-color: rgba(0, 0, 0, 0.2); 
+                                    height: 30px; 
+                                    border-radius: 15px; 
+                                    overflow: hidden;
+                                    position: relative;">
+                            <div style="background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); 
+                                        height: 100%; 
+                                        width: {progress_value*100}%; 
+                                        transition: width 0.3s ease;
+                                        border-radius: 15px;
+                                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background-color: rgba(255, 255, 255, 0.95); 
+                                border-radius: 8px; 
+                                padding: 15px; 
+                                margin-top: 10px;">
+                        <div style="font-size: 22px; 
+                                    font-weight: bold; 
+                                    color: #333; 
+                                    text-align: center;
+                                    line-height: 1.6;">
+                            <span style="color: #667eea;">📊 进度：{processed}/{total} ({progress_value*100:.2f}%)</span>
+                            <span style="margin: 0 10px;">|</span>
+                            <span style="color: #10b981;">✅ 通过：{passed}</span>
+                            <span style="margin: 0 10px;">|</span>
+                            <span style="color: #ef4444;">❌ 失败：{failed}</span>
+                        </div>
+                    </div>
+                </div>
+                """
+                st.markdown(progress_html, unsafe_allow_html=True)
+                
+                # 同时使用Streamlit原生进度条作为备用（确保兼容性）
                 st.progress(progress_value)
-                st.caption(f"📊 进度：{processed}/{total} ({progress_value*100:.2f}%) | ✅ 通过：{passed} | ❌ 失败：{failed}")
             
             # 处理股票（每次刷新处理一只）
             screener = StockScreener()  # 使用全局导入的StockScreener
@@ -1662,14 +1836,26 @@ def page_full_market_screening():
                 st.info(f"🔄 正在处理：{ts_code} ({stock_name}) [{current_index + 1}/{total_stocks}]")
                 
                 try:
-                    # 调用深度分析
+                    # 优化：使用动态获取的年份范围（最近5年数据）
+                    current_year = datetime.now().year  # 获取当前年份（如2025年）
+                    analysis_end_year = current_year  # 结束年份：当前年份（如2025年），查询end_date<=20251231可获取2024年年报
+                    analysis_start_year = current_year - 5  # 开始年份：当前年份-5（如2020年，最近5年）
+                    
+                    # 从session_state获取积分信息（避免重复调用API）
+                    user_points = None
+                    if 'user_points_info' in st.session_state and st.session_state.user_points_info:
+                        user_points = st.session_state.user_points_info.get('total_points', 2000)
+                    
+                    # 调用深度分析（传递并发线程数，用于计算合适的延迟）
                     result = analyze_fundamentals(
                         ts_code=ts_code,
-                        start_date=f"{start_year}0101",
-                        end_date=f"{end_year}1231",
-                        years=years,
+                        start_date=f"{analysis_start_year}0101",
+                        end_date=f"{analysis_end_year}1231",
+                        years=years,  # 这个参数在指定日期范围时会被忽略
                         use_cache=True,
-                        api_delay=api_delay
+                        api_delay=api_delay,
+                        max_workers=1,  # 单线程模式（因为这里是串行处理）
+                        user_points=user_points  # 传入积分信息，避免重复调用API
                     )
                     
                     if result:
@@ -1709,9 +1895,20 @@ def page_full_market_screening():
                     else:
                         st.session_state.screening_progress['failed'] += 1
                     
-                    # 更新进度
+                    # 更新进度和时间记录
+                    current_time = datetime.now()
+                    progress_start_time = st.session_state.screening_progress.get('start_time', current_time)
+                    if current_index > 0:
+                        # 计算当前股票的耗时（从上次更新到现在）
+                        last_time = st.session_state.screening_progress.get('last_update_time', progress_start_time)
+                        stock_time = (current_time - last_time).total_seconds()
+                        time_records = st.session_state.screening_progress.get('time_records', [])
+                        time_records.append(stock_time)
+                        st.session_state.screening_progress['time_records'] = time_records
+                    
                     st.session_state.screening_progress['processed'] = current_index + 1
                     st.session_state.screening_progress['current_index'] = current_index + 1
+                    st.session_state.screening_progress['last_update_time'] = current_time
                     
                     # 继续处理下一只（自动刷新）
                     time.sleep(0.5)  # 短暂延迟，让用户看到进度
@@ -1719,9 +1916,20 @@ def page_full_market_screening():
                     
                 except Exception as e:
                     # 处理失败
+                    current_time = datetime.now()
+                    progress_start_time = st.session_state.screening_progress.get('start_time', current_time)
+                    if current_index > 0:
+                        # 计算当前股票的耗时（从上次更新到现在）
+                        last_time = st.session_state.screening_progress.get('last_update_time', progress_start_time)
+                        stock_time = (current_time - last_time).total_seconds()
+                        time_records = st.session_state.screening_progress.get('time_records', [])
+                        time_records.append(stock_time)
+                        st.session_state.screening_progress['time_records'] = time_records
+                    
                     st.session_state.screening_progress['failed'] += 1
                     st.session_state.screening_progress['processed'] = current_index + 1
                     st.session_state.screening_progress['current_index'] = current_index + 1
+                    st.session_state.screening_progress['last_update_time'] = current_time
                     if st.session_state.debug_mode:
                         st.warning(f"处理 {ts_code} 失败：{e}")
                     time.sleep(0.5)
@@ -1825,32 +2033,115 @@ def page_history():
 
 def main():
     """主函数"""
-    # 积分信息显示（页面顶部）- 按照Tushare文档格式显示
-    # 使用缓存避免频繁查询（积分信息变化不频繁，每天最多50次查询限制）
-    cache_key = 'user_points_info'
-    cache_time_key = 'user_points_info_time'
+    # ========== 积分信息获取（页面置顶，只调用一次，缓存到session_state） ==========
+    # 使用持久化缓存避免频繁查询（积分信息变化不频繁，每天最多50次查询限制）
+    # 缓存键：使用固定键名，确保所有会话共享同一缓存
+    cache_key = 'user_points_info_daily'
     
-    # 检查缓存（10分钟有效）
-    points_info = None
-    if cache_key in st.session_state and cache_time_key in st.session_state:
-        cache_time = st.session_state[cache_time_key]
-        if time.time() - cache_time < 600:  # 10分钟内使用缓存
-            points_info = st.session_state[cache_key]
+    # 初始化session_state中的积分信息（如果不存在）
+    if 'user_points_info' not in st.session_state:
+        st.session_state.user_points_info = None
     
-    # 如果缓存不存在或过期，重新查询
+    # 先检查session_state中是否已有积分信息（避免重复调用）
+    points_info = st.session_state.user_points_info
+    
+    # 如果session_state中没有，则从持久化缓存读取
     if points_info is None:
         try:
-            points_info = get_user_points_info()
-            # 保存到缓存
+            points_info = data_cache.get(cache_key)
+            # 如果从缓存读取成功，保存到session_state
             if points_info:
-                st.session_state[cache_key] = points_info
-                st.session_state[cache_time_key] = time.time()
-        except Exception as e:
-            # 如果查询失败，尝试使用缓存（即使过期）
-            if cache_key in st.session_state:
-                points_info = st.session_state[cache_key]
+                st.session_state.user_points_info = points_info
+        except Exception as cache_read_error:
+            # 缓存读取失败（可能是JSON格式错误），尝试修复
             if st.session_state.debug_mode:
-                st.warning(f"无法获取积分信息: {e}")
+                st.warning(f"⚠️ 缓存读取失败，尝试修复：{cache_read_error}")
+            cache_path = data_cache.get_cache_file_path(cache_key)
+            if os.path.exists(cache_path):
+                try:
+                    # 尝试直接读取缓存文件（不检查过期时间）
+                    with open(cache_path, 'r', encoding='utf-8') as f:
+                        cache_data = json.load(f)
+                    points_info = cache_data.get('data')
+                    if points_info:
+                        cache_time = cache_data.get('datetime', '未知')
+                        if st.session_state.debug_mode:
+                            st.info(f"✅ 从损坏的缓存文件中恢复数据（缓存时间：{cache_time}）")
+                        # 保存到session_state
+                        st.session_state.user_points_info = points_info
+                except Exception as repair_error:
+                    # 缓存文件完全损坏，删除它
+                    if st.session_state.debug_mode:
+                        st.warning(f"⚠️ 缓存文件损坏，删除并重新获取：{repair_error}")
+                    try:
+                        os.remove(cache_path)
+                    except:
+                        pass
+                    points_info = None
+    
+    # 如果仍然没有积分信息，调用API（只调用一次）
+    if points_info is None:
+        # 缓存不存在或已过期，需要调用API
+        try:
+            if st.session_state.debug_mode:
+                st.info("🔄 正在获取积分信息（每天最多调用一次）...")
+            points_info = get_user_points_info()
+            
+            # 保存到session_state和持久化缓存（24小时有效）
+            if points_info:
+                st.session_state.user_points_info = points_info  # 保存到session_state
+                
+                # 使用临时文件写入，成功后再替换（避免并发写入问题）
+                cache_path = data_cache.get_cache_file_path(cache_key)
+                try:
+                    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                    cache_data = {
+                        'data': points_info,
+                        'timestamp': time.time(),
+                        'datetime': datetime.now().isoformat()
+                    }
+                    temp_path = cache_path + '.tmp'
+                    with open(temp_path, 'w', encoding='utf-8') as f:
+                        json.dump(cache_data, f, ensure_ascii=False, indent=2)
+                    os.replace(temp_path, cache_path)
+                    if st.session_state.debug_mode:
+                        st.success("✅ 积分信息已缓存，24小时内不再调用API")
+                except Exception as cache_save_error:
+                    if st.session_state.debug_mode:
+                        st.warning(f"⚠️ 积分信息缓存保存失败：{cache_save_error}")
+        except Exception as e:
+            # 如果查询失败，尝试使用过期缓存（如果有）
+            cache_path = data_cache.get_cache_file_path(cache_key)
+            if os.path.exists(cache_path):
+                try:
+                    with open(cache_path, 'r', encoding='utf-8') as f:
+                        cache_data = json.load(f)
+                    points_info = cache_data.get('data')
+                    if points_info:
+                        cache_time = cache_data.get('datetime', '未知')
+                        if st.session_state.debug_mode:
+                            st.warning(f"⚠️ 获取积分信息失败，使用过期缓存（缓存时间：{cache_time}）: {e}")
+                        # 保存到session_state
+                        st.session_state.user_points_info = points_info
+                except Exception as read_error:
+                    if st.session_state.debug_mode:
+                        st.error(f"❌ 无法获取积分信息且读取缓存失败: {e}, {read_error}")
+            else:
+                if st.session_state.debug_mode:
+                    st.error(f"❌ 无法获取积分信息且无缓存: {e}")
+    else:
+        # 使用缓存数据（从session_state或持久化缓存）
+        if st.session_state.debug_mode:
+            # 显示缓存信息
+            cache_path = data_cache.get_cache_file_path(cache_key)
+            if os.path.exists(cache_path):
+                try:
+                    with open(cache_path, 'r', encoding='utf-8') as f:
+                        cache_data = json.load(f)
+                    cache_time = cache_data.get('datetime', '未知')
+                    st.caption(f"💾 使用缓存的积分信息（缓存时间：{cache_time}）")
+                except:
+                    pass
     
     # 显示积分信息（在页面最顶部）
     if points_info:
@@ -2054,13 +2345,25 @@ def main():
         cache_info = data_cache.get_cache_info()
         
         st.write(f"**缓存统计：**")
-        col1, col2 = st.columns(2)
-        col1.metric("有效缓存", f"{cache_info['valid']} 个")
-        col2.metric("过期缓存", f"{cache_info['expired']} 个")
+        # 使用单列显示，避免侧边栏宽度不足导致文字截断
+        st.metric("有效缓存", f"{cache_info['valid']} 个")
+        st.metric("缓存大小", f"{cache_info['size_mb']} MB")
+        st.metric("过期缓存", f"{cache_info['expired']} 个")
+        st.caption(f"有效期: {cache_info['expire_hours']:.0f} 小时")
         
-        col1, col2 = st.columns(2)
-        col1.metric("缓存大小", f"{cache_info['size_mb']} MB")
-        col2.metric("有效期", f"{cache_info['expire_hours']:.0f} 小时")
+        # 按类型分类显示（如果有分类数据）
+        if 'by_type' in cache_info:
+            st.markdown("---")
+            st.write("**📊 按类型分类：**")
+            type_info = cache_info['by_type']
+            
+            financial = type_info.get('financial', {})
+            company = type_info.get('company', {})
+            user = type_info.get('user', {})
+            
+            st.text(f"财务数据: {financial.get('valid', 0)}/{financial.get('total', 0)}")
+            st.text(f"公司信息: {company.get('valid', 0)}/{company.get('total', 0)}")
+            st.text(f"用户积分: {user.get('valid', 0)}/{user.get('total', 0)}")
         
         st.caption("💡 缓存会自动保存到文件，关闭浏览器后依然有效")
         

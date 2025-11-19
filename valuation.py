@@ -62,146 +62,13 @@ class PRValuation:
     def calculate_dividend_payout_ratio(dividend_per_share: float, eps: float) -> Optional[float]:
         """
         计算股息支付率
-        
-        公式：股息支付率 = (每股股息 / 基本每股收益) × 100%
-        
-        Args:
-            dividend_per_share: 每股股息（现金分红）
-            eps: 基本每股收益
-            
-        Returns:
-            股息支付率(%)，如果无法计算则返回None
         """
-        if eps is None or eps <= 0:
+        if eps is None or eps == 0:
             return None
-        
-        if dividend_per_share is None or dividend_per_share < 0:
-            return None
-        
-        payout_ratio = (dividend_per_share / eps) * 100
-        
-        # 股息支付率不应超过100%（超过说明分红超过利润，需要预警）
-        if payout_ratio > 100:
-            print(f"⚠️ 股息支付率{payout_ratio:.2f}%超过100%，数据可能异常")
-        
-        return payout_ratio
-    
-    @staticmethod
-    def calculate_correction_factor(payout_ratio: Optional[float]) -> float:
-        """
-        计算修正系数N（用于修正市赚率）
-        
-        规则：
-        - 股息支付率 ≥ 50% → N = 1.0（分红充足，不需修正）
-        - 股息支付率 ≤ 25% → N = 2.0（分红太少，需要加倍修正）
-        - 股息支付率在25%-50%之间 → N = 50% / 实际支付率
-        
-        Args:
-            payout_ratio: 股息支付率(%)
-            
-        Returns:
-            修正系数N
-        """
-        if payout_ratio is None:
-            return 2.0  # 无数据时保守处理，使用最大修正系数
-        
-        if payout_ratio >= 50:
-            return 1.0  # 分红充足
-        elif payout_ratio <= 25:
-            return 2.0  # 分红太少
-        else:
-            # 25% < 支付率 < 50%，线性插值
-            return 50.0 / payout_ratio
-    
-    @staticmethod
-    def calculate_standard_pr(pe_ttm: float, roe_waa: float) -> Optional[float]:
-        """
-        计算标准市赚率（个股使用）
-        
-        公式：标准PR = 市盈率TTM / 加权净资产收益率 / 150
-        注：ROE需转换为小数形式（13.01% → 0.1301）
-        
-        Args:
-            pe_ttm: 市盈率TTM（滚动市盈率）
-            roe_waa: 加权净资产收益率(%)
-            
-        Returns:
-            标准市赚率，如果无法计算则返回None
-        """
-        if pe_ttm is None or pe_ttm <= 0:
-            return None
-        
-        roe_rate = PRValuation._normalize_roe(roe_waa)
-        if roe_rate is None or roe_rate <= 0:
-            return None
-        
-        # 标准市赚率 = PE / ROE / 150（ROE转换为小数形式）
-        standard_pr = pe_ttm / roe_rate / PRValuation.STOCK_PR_DENOMINATOR
-        
-        return standard_pr
-    
-    @staticmethod
-    def calculate_corrected_pr(pe_ttm: float, roe_waa: float, 
-                               dividend_per_share: float, eps: float) -> Tuple[Optional[float], Optional[float], float]:
-        """
-        计算修正市赚率（考虑股息支付率的个股估值）
-        
-        公式：修正PR = N × 市盈率TTM / 加权净资产收益率 / 150
-        注：ROE需转换为小数形式（13.01% → 0.1301）
-        
-        Args:
-            pe_ttm: 市盈率TTM
-            roe_waa: 加权净资产收益率(%)
-            dividend_per_share: 每股股息
-            eps: 基本每股收益
-            
-        Returns:
-            (修正市赚率, 股息支付率, 修正系数N)
-        """
-        # 先计算股息支付率
-        payout_ratio = PRValuation.calculate_dividend_payout_ratio(dividend_per_share, eps)
-        
-        # 计算修正系数N
-        N = PRValuation.calculate_correction_factor(payout_ratio)
-        
-        # 计算修正市赚率
-        roe_rate = PRValuation._normalize_roe(roe_waa)
-        if pe_ttm is None or pe_ttm <= 0 or roe_rate is None or roe_rate <= 0:
-            return None, payout_ratio, N
-        
-        corrected_pr = N * pe_ttm / roe_rate / PRValuation.STOCK_PR_DENOMINATOR
-        
-        return corrected_pr, payout_ratio, N
-    
-    @staticmethod
-    def calculate_broad_index_pr(pe_ttm: float, roe_waa: float) -> Optional[float]:
-        """
-        计算宽基指数市赚率
-        
-        公式：宽基PR = 市盈率TTM / 加权净资产收益率 / 150
-        注：ROE需先转换为小数形式
-        
-        注：分母使用150而不是100，因为宽基指数估值更保守
-        
-        Args:
-            pe_ttm: 市盈率TTM
-            roe_waa: 加权净资产收益率(%)
-            
-        Returns:
-            宽基指数市赚率，如果无法计算则返回None
-        """
-        if pe_ttm is None or pe_ttm <= 0:
-            return None
-        
-        roe_rate = PRValuation._normalize_roe(roe_waa)
-        if roe_rate is None or roe_rate <= 0:
-            return None
-        
-        # 宽基指数市赚率 = PE / ROE / 150（ROE转换为小数形式）
-        broad_pr = pe_ttm / roe_rate / PRValuation.INDEX_PR_DENOMINATOR
-        
-        return broad_pr
-    
+        if dividend_per_share is None:
+            return 0.0
+        return dividend_per_share / eps
+
     @staticmethod
     def calculate_buffett_sell_pr(pe_ttm: float, roe_waa: float) -> Optional[float]:
         """
@@ -212,11 +79,11 @@ class PRValuation:
         
         用途：判断整个市场（标普500等宽基指数）是否太贵，PR>1.5时建议清仓
         
-        Args:
+        参数:
             pe_ttm: 市盈率TTM
             roe_waa: 加权净资产收益率(%)
             
-        Returns:
+        返回:
             巴菲特卖标普指标PR值，如果无法计算则返回None
         """
         if pe_ttm is None or pe_ttm <= 0:
@@ -241,11 +108,11 @@ class PRValuation:
         
         用途：判断个股是否值得买入，PR<0.4时严重低估（用40美分买1美元资产）
         
-        Args:
+        参数:
             pe_ttm: 市盈率TTM
             roe_waa: 加权净资产收益率(%)
             
-        Returns:
+        返回:
             巴菲特购买股票指标PR值，如果无法计算则返回None
         """
         if pe_ttm is None or pe_ttm <= 0:
@@ -261,15 +128,91 @@ class PRValuation:
         return buffett_buy_pr
     
     @staticmethod
+    def calculate_standard_pr(pe_ttm: float, roe_waa: float) -> Optional[float]:
+        """
+        计算标准市赚率 (不考虑分红修正)
+        
+        公式：PR = 市盈率TTM / 加权净资产收益率 / 150
+        """
+        if pe_ttm is None or pe_ttm <= 0:
+            return None
+        
+        roe_rate = PRValuation._normalize_roe(roe_waa)
+        if roe_rate is None or roe_rate <= 0:
+            return None
+            
+        return pe_ttm / roe_rate / PRValuation.STOCK_PR_DENOMINATOR
+
+    @staticmethod
+    def calculate_correction_factor(payout_ratio: float) -> float:
+        """
+        计算修正系数N
+        
+        规则：
+        - 股息支付率 >= 50% -> N = 1.0
+        - 股息支付率 <= 25% -> N = 2.0
+        - 25% < 支付率 < 50% -> N = 50% / 支付率
+        """
+        if payout_ratio >= 0.5:
+            return 1.0
+        elif payout_ratio <= 0.25:
+            return 2.0
+        else:
+            return 0.5 / payout_ratio
+
+    @staticmethod
+    def calculate_corrected_pr(pe_ttm: float, roe_waa: float, dividend_per_share: float, eps: float) -> Tuple[Optional[float], Optional[float], float]:
+        """
+        计算修正市赚率 (考虑分红修正)
+        
+        返回:
+            (corrected_pr, payout_ratio, correction_factor)
+        """
+        standard_pr = PRValuation.calculate_standard_pr(pe_ttm, roe_waa)
+        if standard_pr is None:
+            return None, None, 1.0
+            
+        payout_ratio = PRValuation.calculate_dividend_payout_ratio(dividend_per_share, eps)
+        
+        # 如果无法计算支付率（如EPS<=0），则默认不修正(N=1)或按最差情况(N=2)? 
+        # 这里假设如果无法计算支付率，则不进行修正，或者视情况而定。
+        # 根据文档逻辑，如果无法计算，可能无法得出修正PR。
+        # 但为了健壮性，如果无法计算支付率，我们假设N=1 (即不惩罚也不奖励)，或者返回None?
+        # 让我们假设N=1如果无法计算支付率
+        if payout_ratio is None:
+            return standard_pr, None, 1.0
+            
+        N = PRValuation.calculate_correction_factor(payout_ratio)
+        corrected_pr = standard_pr * N
+        
+        return corrected_pr, payout_ratio * 100, N
+
+    @staticmethod
+    def calculate_broad_index_pr(pe_ttm: float, roe_waa: float) -> Optional[float]:
+        """
+        计算宽基指数市赚率
+        
+        公式：PR = 市盈率TTM / 加权净资产收益率 / 150
+        """
+        if pe_ttm is None or pe_ttm <= 0:
+            return None
+        
+        roe_rate = PRValuation._normalize_roe(roe_waa)
+        if roe_rate is None or roe_rate <= 0:
+            return None
+            
+        return pe_ttm / roe_rate / PRValuation.INDEX_PR_DENOMINATOR
+    
+    @staticmethod
     def generate_trading_signal(pr_value: float, index_name: str) -> Dict:
         """
         生成交易信号
         
-        Args:
+        参数:
             pr_value: 当前市赚率值
             index_name: 指数名称（如"沪深300"）
             
-        Returns:
+        返回:
             交易信号字典，包含信号类型、强度、建议仓位等
         """
         # 获取配置
@@ -337,10 +280,10 @@ class PRValuation:
         """
         综合分析个股估值
         
-        Args:
+        参数:
             data: 包含pe_ttm, roe_waa, dividend_per_share, eps等字段的字典
             
-        Returns:
+        返回:
             完整的估值分析结果
         """
         pe_ttm = data.get('pe_ttm')
@@ -382,11 +325,11 @@ class PRValuation:
         """
         综合分析指数估值（宽基指数）
         
-        Args:
+        参数:
             data: 包含pe_ttm, roe_waa等字段的字典
             index_name: 指数名称
             
-        Returns:
+        返回:
             完整的估值分析结果
         """
         pe_ttm = data.get('pe_ttm')
