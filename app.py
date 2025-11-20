@@ -26,7 +26,7 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime
 from typing import Optional
-from utils import analyze_fundamentals, run_connectivity_tests, fetch_valuation_data, get_user_points_info, calculate_recent_years
+from utils import analyze_fundamentals, run_connectivity_tests, fetch_valuation_data, get_user_points_info, calculate_recent_years, fetch_kline_data
 import json
 import os
 import plotly.graph_objects as go
@@ -789,8 +789,29 @@ def page_single_analysis():
                 progress_callback=update_progress,
                 user_points=user_points  # 传入积分信息，避免重复调用API
             )
-            
             progress_bar.empty()
+            # 如果已收盘，记录每只股票的收盘价作为单独的记录（标记为 market_close）
+            if not is_trading_time:
+                market_close_records = []
+                # 在循环中已收集每只股票的最新信息，存于临时列表 `code_info_list`
+                for info in code_info_list:
+                    code_mc = info['code']
+                    name_mc = info['name']
+                    date_mc = info['date']
+                    price_mc = info['price']
+                    record_mc = {
+                        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "date": date_mc,
+                        "code": code_mc,
+                        "name": name_mc,
+                        "signal_type": "market_close",
+                        "signal_desc": "收盘价",
+                        "price": price_mc
+                    }
+                    if WatchlistHistoryManager.save_record(record_mc):
+                        new_records_count += 1
+                        market_close_records.append(record_mc)
+
             status_text.empty()
             
             # 检查是否使用了缓存（通过判断耗时）
@@ -1304,6 +1325,10 @@ def page_pr_valuation():
                         else:
                             st.success("✅ PR ≤ 1.0，市场估值合理")
                     st.caption("公式：PR = PE / ROE / 150")
+                    
+                    # 左侧不再显示个股的逆向推导，统一移至右侧
+                    if target_type == "个股":
+                        st.caption("💡 个股的买卖价格推导请看右侧 👉")
                 
                 with col2:
                     st.markdown("### 💰 巴菲特购买股票指标（系数100）")
@@ -1320,6 +1345,41 @@ def page_pr_valuation():
                         else:
                             st.warning("⚠️ PR > 1.0，可能高估，建议卖出或持有")
                     st.caption("公式：PR = PE / ROE / 100")
+                    
+                    # 逆向推导：买入 & 卖出价格 (统一使用系数100)
+                    if target_type == "个股":
+                        eps_val = val_data.get('eps')
+                        roe_val = val_data.get('roe_waa')
+                        current_price = val_data.get('close')
+                        
+                        # 计算各个阈值的价格 (Coeff 100)
+                        price_buy_strong = PRValuation.calculate_price_for_pr(0.4, roe_val, eps_val, 100)
+                        price_sell_alert = PRValuation.calculate_price_for_pr(1.0, roe_val, eps_val, 100)
+                        price_sell_clear = PRValuation.calculate_price_for_pr(1.5, roe_val, eps_val, 100)
+                        
+                        if current_price is not None:
+                            st.markdown("#### 📊 逆向推导：价格锚点")
+                            
+                            # 1. 卖出警戒 (PR=1.0)
+                            if price_sell_alert is not None:
+                                diff = (price_sell_alert - current_price) / current_price * 100
+                                color = "red" if diff < 0 else "green"
+                                direction = "需跌" if diff < 0 else "需涨"
+                                st.markdown(f"📈 **卖出警戒价 (PR=1.0)：** `{price_sell_alert:.2f}元` (当前 `{current_price}元`, {direction} :{color}[{abs(diff):.1f}%])")
+                            
+                            # 2. 清仓价 (PR=1.5)
+                            if price_sell_clear is not None:
+                                diff = (price_sell_clear - current_price) / current_price * 100
+                                color = "red" if diff < 0 else "green"
+                                direction = "需跌" if diff < 0 else "需涨"
+                                st.markdown(f"🚀 **清仓价 (PR=1.5)：** `{price_sell_clear:.2f}元` (当前 `{current_price}元`, {direction} :{color}[{abs(diff):.1f}%])")
+                                
+                            # 3. 强烈买入 (PR=0.4)
+                            if price_buy_strong is not None:
+                                diff = (price_buy_strong - current_price) / current_price * 100
+                                color = "red" if diff < 0 else "green"
+                                direction = "需跌" if diff < 0 else "需涨"
+                                st.markdown(f"📉 **强烈买入价 (PR=0.4)：** `{price_buy_strong:.2f}元` (当前 `{current_price}元`, {direction} :{color}[{abs(diff):.1f}%])")
                 
             else:
                 # 指数估值分析
@@ -1480,6 +1540,303 @@ def page_pr_valuation():
                 )
                 
                 st.plotly_chart(fig, use_container_width=True)
+            
+            # ---------------------------------------------------------
+            # 新增：K线图与MACD分析 (仅个股)
+            # ---------------------------------------------------------
+            if target_type == "个股":
+                st.divider()
+                st.subheader("📈 行情与趋势分析")
+                
+                # K线设置选项
+                col_k1, col_k2 = st.columns(2)
+                with col_k1:
+                    k_period = st.selectbox("K线周期", ["日线", "周线", "月线"], index=0, key="k_period")
+                with col_k2:
+                    k_adj = st.selectbox("复权类型", ["前复权 (QFQ)", "不复权", "后复权 (HFQ)"], index=0, key="k_adj")
+                
+                # 映射参数
+                period_map = {"日线": "daily", "周线": "weekly", "月线": "monthly"}
+                adj_map = {"前复权 (QFQ)": "qfq", "不复权": None, "后复权 (HFQ)": "hfq"}
+                
+                selected_period = period_map[k_period]
+                selected_adj = adj_map[k_adj]
+                
+                # 获取K线数据
+                with st.spinner(f"正在获取 {ts_code} {k_period} {k_adj} 数据..."):
+                    df_kline = fetch_kline_data(ts_code, period=selected_period, adj=selected_adj, limit=500)  # 获取更多数据以保证计算准确
+                
+                if df_kline is not None and not df_kline.empty:
+                    # 预处理：确保日期格式正确，并按时间升序排列
+                    df_kline['trade_date'] = pd.to_datetime(df_kline['trade_date']).dt.strftime('%Y-%m-%d')
+                    df_kline = df_kline.sort_values('trade_date', ascending=True).reset_index(drop=True)
+                    
+                    # 计算MACD (修正版参数: 12, 23, 8)
+                    df_kline = PRValuation.calculate_macd(df_kline, fast_period=12, slow_period=23, signal_period=8)
+                    
+                    # 计算黄柱
+                    df_kline = PRValuation.calculate_yellow_bar(df_kline)
+                    
+                    # -------------------------------------------------
+                    # 绘制组合图表 (K线 + MACD)
+                    # -------------------------------------------------
+                    from plotly.subplots import make_subplots
+                    
+                    # 预处理：生成中文日期和悬停文本
+                    # 注意：Plotly旧版本不支持 hovertemplate，改用 text + hoverinfo
+                    chinese_dates = pd.to_datetime(df_kline['trade_date']).dt.strftime('%Y年%m月%d日')
+                    
+                    k_text = [
+                        f"日期: {d}<br>开盘: {o:.2f}<br>最高: {h:.2f}<br>最低: {l:.2f}<br>收盘: {c:.2f}"
+                        for d, o, h, l, c in zip(chinese_dates, df_kline['open'], df_kline['high'], df_kline['low'], df_kline['close'])
+                    ]
+                    
+                    # 创建子图: Row 1 = K线, Row 2 = MACD
+                    # 调整高度比例，让K线图占据更多空间 (80% : 20%)
+                    # 去除子图标题，节省垂直空间，使界面更紧凑专业
+                    fig_k = make_subplots(
+                        rows=2, cols=1, 
+                        shared_xaxes=True, 
+                        vertical_spacing=0.02, # 减小垂直间距
+                        row_heights=[0.8, 0.2], # 8:2 黄金比例
+                    )
+                    
+                    # 1. K线图 (使用中国股市红涨绿跌配色)
+                    fig_k.add_trace(go.Candlestick(
+                        x=df_kline['trade_date'],
+                        open=df_kline['open'],
+                        high=df_kline['high'],
+                        low=df_kline['low'],
+                        close=df_kline['close'],
+                        increasing_line_color='#ef5350', # 红色 (涨)
+                        decreasing_line_color='#26a69a', # 绿色 (跌)
+                        name='K线',
+                        text=k_text,
+                        hoverinfo='text'
+                    ), row=1, col=1)
+                    
+                    # 添加移动平均线 (MA5, MA10, MA20) - 增强专业感
+                    ma5 = df_kline['close'].rolling(window=5).mean()
+                    ma10 = df_kline['close'].rolling(window=10).mean()
+                    ma20 = df_kline['close'].rolling(window=20).mean()
+                    
+                    # 生成MA悬停文本
+                    ma5_text = [f"MA5: {v:.2f}" if pd.notna(v) else "" for v in ma5]
+                    ma10_text = [f"MA10: {v:.2f}" if pd.notna(v) else "" for v in ma10]
+                    ma20_text = [f"MA20: {v:.2f}" if pd.notna(v) else "" for v in ma20]
+                    
+                    fig_k.add_trace(go.Scatter(x=df_kline['trade_date'], y=ma5, line=dict(color='black', width=1), name='MA5', text=ma5_text, hoverinfo='text'), row=1, col=1)
+                    fig_k.add_trace(go.Scatter(x=df_kline['trade_date'], y=ma10, line=dict(color='orange', width=1), name='MA10', text=ma10_text, hoverinfo='text'), row=1, col=1)
+                    fig_k.add_trace(go.Scatter(x=df_kline['trade_date'], y=ma20, line=dict(color='purple', width=1), name='MA20', text=ma20_text, hoverinfo='text'), row=1, col=1)
+                    
+                    # 2. MACD 指标
+                    
+                    # 生成MACD悬停文本
+                    dif_text = [f"DIF: {v:.2f}" for v in df_kline['dif']]
+                    dea_text = [f"DEA: {v:.2f}" for v in df_kline['dea']]
+                    macd_text = [f"MACD: {v:.2f}" for v in df_kline['macd']]
+                    
+                    # 绘制 DIF 和 DEA
+                    fig_k.add_trace(go.Scatter(
+                        x=df_kline['trade_date'], y=df_kline['dif'],
+                        line=dict(color='#2962FF', width=1.5), # 蓝色 DIF
+                        name='DIF',
+                        text=dif_text,
+                        hoverinfo='text'
+                    ), row=2, col=1)
+                    
+                    fig_k.add_trace(go.Scatter(
+                        x=df_kline['trade_date'], y=df_kline['dea'],
+                        line=dict(color='#FF6D00', width=1.5), # 橙色 DEA
+                        name='DEA',
+                        text=dea_text,
+                        hoverinfo='text'
+                    ), row=2, col=1)
+                    
+                    # 绘制 MACD 柱体 (红绿柱)
+                    # 区分红绿柱颜色 (中国习惯：红涨绿跌)
+                    # 注意：MACD柱体 = (DIF-DEA)*2。正数为红，负数为绿。
+                    colors = ['#ef5350' if v >= 0 else '#26a69a' for v in df_kline['macd']]
+                    fig_k.add_trace(go.Bar(
+                        x=df_kline['trade_date'], y=df_kline['macd'],
+                        marker_color=colors,
+                        name='MACD柱',
+                        text=macd_text,
+                        hoverinfo='text'
+                    ), row=2, col=1)
+                    
+                    # 绘制 黄柱 (叠加在MACD柱体上)
+                    # 逻辑：STICKLINE(MACD>MA(MACD,5),MACD,MA(MACD,5),1,0),COLORYELLOW;
+                    # 含义：当 MACD > MACD_MA5 时，在 MACD 和 MACD_MA5 之间绘制黄色柱体
+                    
+                    # 过滤出有黄柱的数据点
+                    yellow_mask = df_kline['yellow_bar'] != 0
+                    if yellow_mask.any():
+                        # 计算柱体高度 (MACD - MA5)
+                        # 注意：Plotly Bar 的 y 是高度，base 是起始位置
+                        y_values = df_kline.loc[yellow_mask, 'macd'] - df_kline.loc[yellow_mask, 'macd_ma5']
+                        base_values = df_kline.loc[yellow_mask, 'macd_ma5']
+                        
+                        # 生成黄柱悬停文本
+                        yellow_text = [f"黄柱(超额动能): {v:.2f}" for v in y_values]
+                        
+                        fig_k.add_trace(go.Bar(
+                            x=df_kline.loc[yellow_mask, 'trade_date'], 
+                            y=y_values,
+                            base=base_values,
+                            marker_color='#FFD700', # 金黄色
+                            name='趋势转强(黄柱)',
+                            opacity=1.0, # 不透明，覆盖在原柱体上
+                            text=yellow_text,
+                            hoverinfo='text'
+                        ), row=2, col=1)
+                    
+                    # 布局设置
+                    fig_k.update_layout(
+                        xaxis_rangeslider_visible=False, # 主图不显示，我们在下方统一配置
+                        height=800, # 增加高度到800，提供更开阔的视野
+                        hovermode='x unified', # 统一十字光标
+                        plot_bgcolor='white',
+                        paper_bgcolor='white',
+                        margin=dict(l=5, r=5, t=10, b=10), # 极简边距，最大化图表区域
+                        legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="right", x=1),
+                        barmode='overlay'
+                    )
+                    
+                    # 坐标轴设置
+                    # 1. K线图 X轴 (Row 1) - 隐藏标签
+                    fig_k.update_xaxes(
+                        type='date', # 改回 date 类型以支持缩放和范围选择
+                        rangebreaks=[
+                            dict(bounds=["sat", "mon"]), # 隐藏周末
+                        ],
+                        showticklabels=False, # 上方子图不显示标签
+                        showgrid=True, 
+                        gridcolor='#f0f0f0',
+                        tickformat="%Y年%m月%d日", # 设置X轴日期格式为中文
+                        hoverformat="%Y年%m月%d日", # 设置悬停日期格式为中文
+                        row=1, col=1
+                    )
+                    
+                    # 2. MACD图 X轴 (Row 2) - 显示标签和滑块
+                    fig_k.update_xaxes(
+                        type='date',
+                        rangebreaks=[
+                            dict(bounds=["sat", "mon"]), # 隐藏周末
+                        ],
+                        showticklabels=True, # 下方子图显示标签
+                        showgrid=True, 
+                        gridcolor='#f0f0f0',
+                        tickformat="%Y年%m月%d日", # 设置X轴日期格式为中文
+                        hoverformat="%Y年%m月%d日", # 设置悬停日期格式为中文
+                        rangeslider=dict(visible=True, thickness=0.05), # 启用下方范围滑块
+                        rangeselector=dict(
+                            buttons=list([
+                                dict(count=1, label="1月", step="month", stepmode="backward"),
+                                dict(count=3, label="3月", step="month", stepmode="backward"),
+                                dict(count=6, label="6月", step="month", stepmode="backward"),
+                                dict(count=1, label="YTD", step="year", stepmode="todate"),
+                                dict(count=1, label="1年", step="year", stepmode="backward"),
+                                dict(step="all", label="所有")
+                            ]),
+                            x=0, y=-0.2 # 调整按钮位置
+                        ),
+                        row=2, col=1
+                    )
+                    
+                    # 设置默认显示范围为最近1个月
+                    if not df_kline.empty:
+                        last_date = pd.to_datetime(df_kline['trade_date'].iloc[-1])
+                        start_date = last_date - pd.DateOffset(months=1)
+                        # 注意：range需要是字符串或datetime对象
+                        fig_k.update_xaxes(range=[start_date, last_date], row=2, col=1)
+                    
+                    fig_k.update_yaxes(showgrid=True, gridcolor='#f0f0f0')
+                    
+                    # ---------------------------------------------------------
+                    # 实时信号提醒逻辑
+                    # ---------------------------------------------------------
+                    # 检查最新一天（如果是实时数据，就是今天）是否出现金叉
+                    last_row = df_kline.iloc[-1]
+                    prev_row = df_kline.iloc[-2]
+                    
+                    # 金叉条件：昨天 DIF <= DEA，今天 DIF > DEA
+                    is_gold_cross = (prev_row['dif'] <= prev_row['dea']) and (last_row['dif'] > last_row['dea'])
+                    
+                    # 死叉条件：昨天 DIF >= DEA，今天 DIF < DEA
+                    is_death_cross = (prev_row['dif'] >= prev_row['dea']) and (last_row['dif'] < last_row['dea'])
+                    
+                    if is_gold_cross:
+                        st.error(f"🔔 **重磅提醒：今日 ({last_row['trade_date']}) 出现 MACD 金叉！** \n\n 建议关注买入机会，结合黄柱信号确认趋势。", icon="🚀")
+                    elif is_death_cross:
+                        st.warning(f"🔔 **风险提示：今日 ({last_row['trade_date']}) 出现 MACD 死叉！** \n\n 建议注意风险，考虑减仓或离场。", icon="⚠️")
+                    
+                    st.plotly_chart(fig_k, use_container_width=True)
+                    
+                    # ---------------------------------------------------------
+                    # 指标含义解释
+                    # ---------------------------------------------------------
+                    with st.expander("📚 指标含义说明 (新手必读)", expanded=False):
+                        st.markdown("""
+                        ### 1. 均线 (MA - Moving Average)
+                        *   **MA5 (黑线)**：5日均线，代表最近5个交易日的平均成本，反映**短期趋势**。
+                        *   **MA10 (橙线)**：10日均线，代表最近10个交易日的平均成本，反映**中短期趋势**。
+                        *   **MA20 (紫线)**：20日均线，代表最近20个交易日的平均成本，反映**中期趋势**（生命线）。
+                        
+                        ### 2. MACD (平滑异同移动平均线)
+                        *   **DIF (快线/蓝线)**：短期与长期移动平均线的差离值。反应灵敏，主要用于判断股价的短期波动。
+                        *   **DEA (慢线/橙线)**：DIF的移动平均线。反应较稳，用于辅助判断趋势。
+                        *   **金叉**：当 DIF 上穿 DEA 时，视为买入信号。
+                        *   **死叉**：当 DIF 下穿 DEA 时，视为卖出信号。
+                        
+                        ### 3. 黄柱 (超额动能)
+                        *   **定义**：当 MACD 柱体的值 **大于** 其过去5天的平均值时，超出的部分显示为黄色。
+                        *   **含义**：代表当前上涨动能**强于**过去5天的平均水平，是**趋势加速**或**强势维持**的信号。
+                        *   **用法**：
+                            *   **黄柱出现**：动能增强，机会来临。
+                            *   **黄柱持续**：趋势强劲，持股待涨。
+                            *   **黄柱消失**：动能减弱，警惕回调。
+                        """)
+                    
+                    # -------------------------------------------------
+                    # 信号解读
+                    # -------------------------------------------------
+                    st.markdown("#### 💡 趋势信号解读")
+                    
+                    latest = df_kline.iloc[-1]
+                    prev = df_kline.iloc[-2] if len(df_kline) > 1 else latest
+                    
+                    # 1. 黄柱信号
+                    if latest['yellow_bar'] != 0 and prev['yellow_bar'] == 0:
+                        st.info("🔔 **黄柱首次出现**：阶段性机会点，行情可能由弱转强，请结合基本面关注。")
+                    elif latest['yellow_bar'] == 0 and prev['yellow_bar'] != 0:
+                        st.warning("⚠️ **黄柱消失**：上涨动能衰减，高位请注意风险，考虑减仓或止盈。")
+                    elif latest['yellow_bar'] != 0:
+                        st.success("📈 **黄柱持续中**：趋势向好，多头动能维持。")
+                    
+                    # 2. MACD 金叉/死叉
+                    macd_cross_str = ""
+                    if latest['dif'] > latest['dea'] and prev['dif'] <= prev['dea']:
+                        macd_cross_str = "MACD金叉 (买入信号)"
+                        st.success(f"🟢 **{macd_cross_str}**：DIF 上穿 DEA，趋势转强。")
+                    elif latest['dif'] < latest['dea'] and prev['dif'] >= prev['dea']:
+                        macd_cross_str = "MACD死叉 (卖出信号)"
+                        st.error(f"🔴 **{macd_cross_str}**：DIF 下穿 DEA，趋势转弱。")
+                    
+                    # 3. 综合建议
+                    with st.expander("查看详细操作建议"):
+                        st.markdown("""
+                        **黄柱业务含义：**
+                        - **出现 (买入/加仓观察)**：在股价相对低位，指标首次出现黄柱，视为阶段性机会点。
+                        - **消失 (减仓/离场观察)**：在股价相对高位，黄柱突然消失，提示动能衰减，注意风险。
+                        
+                        **组合信号参考：**
+                        - **建仓**：黄柱首次出现 + MACD金叉 = 趋势转强共振。
+                        - **减仓**：高位黄柱消失 + MACD死叉 = 强烈离场信号。
+                        """)
+                        
+                else:
+                    st.warning("未获取到K线数据，无法展示趋势分析。")
             
         except Exception as e:
             st.error(f"❌ 估值分析失败：{e}")
@@ -1863,11 +2220,6 @@ def page_full_market_screening():
                         metrics = result.get('metrics')
                         
                         if metrics is not None and not metrics.empty:
-                            # 检查基本面
-                            fundamentals_pass, fundamentals_details = screener.check_fundamentals_pass(
-                                audit_records, metrics
-                            )
-                            
                             if fundamentals_pass:
                                 # 基本面通过，检查估值
                                 valuation_pass, valuation_details = screener.check_valuation_pass(
@@ -2030,6 +2382,403 @@ def page_history():
         st.success("✅ 历史记录已清空")
         st.rerun()
 
+
+class WatchlistHistoryManager:
+    """
+    盯盘历史记录管理器
+    """
+    FILE_PATH = "data/watchlist_history.json"
+    
+    @staticmethod
+    def load_history():
+        if os.path.exists(WatchlistHistoryManager.FILE_PATH):
+            try:
+                with open(WatchlistHistoryManager.FILE_PATH, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                return []
+        return []
+    
+    @staticmethod
+    def save_record(record):
+        """
+        保存记录
+        逻辑：
+        1. 如果是同一天、同代码、同信号的记录已存在 -> 更新最后触发时间和触发次数
+        2. 如果不存在 -> 新增记录
+        """
+        history = WatchlistHistoryManager.load_history()
+        
+        # 查找是否存在记录
+        existing_record = None
+        for item in history:
+            if (item['date'] == record['date'] and 
+                item['code'] == record['code'] and 
+                item['signal_type'] == record['signal_type']):
+                existing_record = item
+                break
+        
+        if existing_record:
+            # 更新现有记录
+            existing_record['last_time'] = record['time'] # 更新最后触发时间
+            existing_record['price'] = record['price']    # 更新最新价格
+            existing_record['trigger_count'] = existing_record.get('trigger_count', 1) + 1
+            
+            # 移动到列表最前（可选，或者保持原位）
+            # history.remove(existing_record)
+            # history.insert(0, existing_record)
+        else:
+            # 新增记录
+            record['trigger_count'] = 1
+            record['last_time'] = record['time']
+            history.append(record)
+        
+        # 按时间倒序排列
+        history.sort(key=lambda x: x['time'], reverse=True)
+        
+        os.makedirs(os.path.dirname(WatchlistHistoryManager.FILE_PATH), exist_ok=True)
+        with open(WatchlistHistoryManager.FILE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+        return True
+
+def page_watchlist():
+    """
+    👀 盯盘助手页面
+    
+    功能：
+        1. 批量监控指定股票的MACD信号
+        2. 实时计算金叉/死叉
+        3. 自动刷新（5分钟）
+        4. 历史记录与下载
+    """
+    st.header("👀 盯盘助手")
+    
+    # 判断当前市场状态
+    now = datetime.now()
+    current_time = now.time()
+    is_trading_time = False
+    market_status = "休市中"
+    
+    # A股交易时间: 9:30-11:30, 13:00-15:00
+    morning_start = datetime.strptime("09:30", "%H:%M").time()
+    morning_end = datetime.strptime("11:30", "%H:%M").time()
+    afternoon_start = datetime.strptime("13:00", "%H:%M").time()
+    afternoon_end = datetime.strptime("15:00", "%H:%M").time()
+    
+    if (morning_start <= current_time <= morning_end) or (afternoon_start <= current_time <= afternoon_end):
+        is_trading_time = True
+        market_status = "🟢 交易中"
+    elif current_time > afternoon_end:
+        market_status = "🔴 已收盘"
+    else:
+        market_status = "⚪ 休市中"
+        
+    st.markdown(f"*批量监控股票池，实时捕捉 MACD 金叉/死叉信号 | 当前状态：**{market_status}** ({now.strftime('%H:%M')})*")
+    
+    # 默认股票列表
+    default_stocks = """
+601336.SH 新华保险
+600132.SH 重庆啤酒
+601628.SH 中国人寿
+600873.SH 梅花生物
+002612.SZ 朗姿股份
+000921.SZ 海信家电
+600011.SH 华能国际
+600210.SH 紫江企业
+600866.SH 星湖科技
+600036.SH 招商银行
+600285.SH 羚锐制药
+603565.SH 中谷物流
+601601.SH 中国太保
+600066.SH 宇通客车
+601319.SH 中国人保
+603766.SH 隆鑫通用
+000899.SZ 赣能股份
+002847.SZ 盐津铺子
+601168.SH 西部矿业
+605499.SH 东鹏饮料
+000429.SZ 粤高速A
+000791.SZ 甘肃能源
+603816.SH 顾家家居
+600968.SH 海油发展
+600096.SH 云天化
+600863.SH 内蒙华电
+002043.SZ 兔宝宝
+300972.SZ 万辰集团
+601991.SH 大唐发电
+605117.SH 德业股份
+002056.SZ 横店东磁
+600961.SH 株冶集团
+002128.SZ 电投能源
+603993.SH 洛阳钼业
+603551.SH 奥普科技
+600578.SH 京能电力
+600887.SH 伊利股份
+600012.SH 皖通高速
+000600.SZ 建投能源
+601899.SH 紫金矿业
+000975.SZ 山金国际
+002749.SZ 国光股份
+000933.SZ 神火股份
+600938.SH 中国海油
+600598.SH 北大荒
+300573.SZ 兴齐眼药
+600398.SH 海澜之家
+600660.SH 福耀玻璃
+    """
+    
+    tab_monitor, tab_history = st.tabs(["🔭 实时监控", "📜 历史报警记录"])
+    
+    with tab_monitor:
+        with st.expander("📝 编辑监控股票池", expanded=False):
+            stock_input = st.text_area("输入股票代码（支持代码+名称，每行一个）", value=default_stocks.strip(), height=200)
+        
+        # 提取代码
+        import re
+        codes = re.findall(r'(\d{6}\.[A-Z]{2})', stock_input)
+        # 去重并保持顺序
+        codes = list(dict.fromkeys(codes))
+        
+        col1, col2, col3 = st.columns([1, 1, 2])
+        with col1:
+            start_btn = st.button("🚀 开始扫描", type="primary", use_container_width=True)
+        with col2:
+            auto_refresh = st.checkbox("⏱️ 自动刷新 (每5分钟)")
+        
+        if auto_refresh:
+            import time
+            st.caption("自动刷新已开启，请勿关闭页面...")
+            time_placeholder = st.empty()
+            
+            # 如果没有点击开始，自动触发一次
+            if not start_btn:
+                start_btn = True
+                
+        if start_btn:
+            st.divider()
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            results = []
+            alerts = []
+            new_records_count = 0
+            
+            # 用于收集每只股票的最新信息，以便收盘后统一记录
+            code_info_list = []
+            total = len(codes)
+            for i, code in enumerate(codes):
+                status_text.text(f"正在扫描 ({i+1}/{total}): {code} ...")
+                progress_bar.progress((i + 1) / total)
+                
+                try:
+                    # 获取日线数据 (含实时拼接)
+                    df = fetch_kline_data(code, period='daily', limit=100)
+                    
+                    if df is not None and not df.empty and len(df) >= 30:
+                        # 确保按日期升序
+                        df = df.sort_values('trade_date', ascending=True).reset_index(drop=True)
+                        
+                        # 计算MACD
+                        df = PRValuation.calculate_macd(df, fast_period=12, slow_period=23, signal_period=8)
+                        df = PRValuation.calculate_yellow_bar(df)
+                        
+                        last_row = df.iloc[-1]
+                        prev_row = df.iloc[-2]
+                        
+                        # 信号判断
+                        is_gold_cross = (prev_row['dif'] <= prev_row['dea']) and (last_row['dif'] > last_row['dea'])
+                        is_death_cross = (prev_row['dif'] >= prev_row['dea']) and (last_row['dif'] < last_row['dea'])
+                        is_yellow = last_row['yellow_bar'] != 0
+                        # 初始化信号描述
+                        signal_str = "无"
+                        signal_type = "none"
+                        if is_gold_cross:
+                            signal_str = "金叉 🚀"
+                            signal_type = "gold_cross"
+                        elif is_death_cross:
+                            signal_str = "死叉 ⚠️"
+                            signal_type = "death_cross"
+                        
+                        # 获取股票名称
+                        name = "未知"
+                        for line in stock_input.split('\n'):
+                            if code in line:
+                                parts = line.strip().split()
+                                if len(parts) > 1:
+                                    name = parts[1]
+                                break
+                        
+                        res = {
+                            "代码": code,
+                            "名称": name,
+                            "最新日期": last_row['trade_date'],
+                            "现价": last_row['close'],
+                            "DIF": round(last_row['dif'], 3),
+                            "DEA": round(last_row['dea'], 3),
+                            "MACD柱": round(last_row['macd'], 3),
+                            "信号": signal_str,
+                            "黄柱状态": "🔥 强势" if is_yellow else "⚪ 普通"
+                        }
+                        results.append(res)
+                        
+                        # 收集收盘信息用于后续收盘记录
+                        code_info_list.append({
+                            "code": code,
+                            "name": name,
+                            "date": last_row['trade_date'],
+                            "price": float(last_row['close'])
+                        })
+                        
+                        # 记录保存逻辑
+                        if signal_type != "none":
+                            # Determine price based on market status
+                            if is_trading_time:
+                                try:
+                                    import tushare as ts
+                                    rt_code = code.split('.')[0]
+                                    rt_data = ts.get_realtime_quotes(rt_code)
+                                    price_val = float(rt_data.iloc[0]['price']) if rt_data is not None and not rt_data.empty else float(last_row['close'])
+                                except Exception:
+                                    price_val = float(last_row['close'])
+                            else:
+                                price_val = float(last_row['close'])
+                            record = {
+                                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                "date": last_row['trade_date'],
+                                "code": code,
+                                "name": name,
+                                "signal_type": signal_type,
+                                "signal_desc": "MACD金叉" if is_gold_cross else "MACD死叉",
+                                "price": price_val
+                            }
+                            if WatchlistHistoryManager.save_record(record):
+                                new_records_count += 1
+                            
+                            # Add to alerts for immediate display
+                            if is_gold_cross:
+                                # Use real-time price for alert if trading
+                                price_for_alert = price_val if is_trading_time else float(last_row['close'])
+                                alerts.append(f"🚀 **{name} ({code})** 今日出现 **MACD金叉**。现价：{price_for_alert}")
+                            elif is_death_cross:
+                                # Use real-time price for alert if trading
+                                price_for_alert = price_val if is_trading_time else float(last_row['close'])
+                                alerts.append(f"⚠️ **{name} ({code})** 今日出现 **MACD死叉**。现价：{price_for_alert}")
+                            
+                except Exception as e:
+                    print(f"Error scanning {code}: {e}")
+                    continue
+            
+            status_text.text("扫描完成！")
+            progress_bar.empty()
+            
+            # 如果已收盘，统一记录收盘价（标记为 market_close）
+            if not is_trading_time:
+                for info in code_info_list:
+                    record_mc = {
+                        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "date": info['date'],
+                        "code": info['code'],
+                        "name": info['name'],
+                        "signal_type": "market_close",
+                        "signal_desc": "收盘价",
+                        "price": info['price']
+                    }
+                    if WatchlistHistoryManager.save_record(record_mc):
+                        new_records_count += 1
+            
+            # 显示报警
+            if alerts:
+                st.error("### 🔔 今日重要信号提醒")
+                for alert in alerts:
+                    if "金叉" in alert:
+                        st.success(alert)
+                    else:
+                        st.warning(alert)
+                
+                if new_records_count > 0:
+                    st.toast(f"已自动保存 {new_records_count} 条新报警记录到历史档案", icon="💾")
+            else:
+                st.info("今日暂无金叉/死叉信号。")
+                
+            # 显示结果表格
+            if results:
+                st.subheader("📋 监控列表概览")
+                df_res = pd.DataFrame(results)
+                
+                # 样式高亮
+                def highlight_signal(val):
+                    color = ''
+                    if '金叉' in str(val):
+                        color = 'background-color: #e6fffa; color: #00bfa5; font-weight: bold'
+                    elif '死叉' in str(val):
+                        color = 'background-color: #fff5f5; color: #ff5252; font-weight: bold'
+                    return color
+                    
+                st.dataframe(
+                    df_res.style.applymap(highlight_signal, subset=['信号']),
+                    use_container_width=True,
+                    hide_index=True
+                )
+                
+            # 自动刷新逻辑
+            if auto_refresh:
+                import time
+                for i in range(300, 0, -1):
+                    time_placeholder.caption(f"⏳ 下次刷新倒计时: {i} 秒")
+                    time.sleep(1)
+                st.rerun()
+
+    with tab_history:
+        st.subheader("📜 历史报警记录")
+        history_data = WatchlistHistoryManager.load_history()
+        
+        if history_data:
+            df_history = pd.DataFrame(history_data)
+            
+            # 转换列名以优化显示
+            df_display = df_history.rename(columns={
+                "time": "首次触发",
+                "last_time": "最后触发",
+                "date": "日期",
+                "code": "代码",
+                "name": "名称",
+                "signal_desc": "信号",
+                "price": "最新价",
+                "trigger_count": "触发次数"
+            })
+            
+            # 确保列存在（兼容旧数据）
+            if "触发次数" not in df_display.columns:
+                df_display["触发次数"] = 1
+            if "最后触发" not in df_display.columns:
+                df_display["最后触发"] = df_display["首次触发"]
+            
+            # 选择显示的列
+            cols_to_show = ["日期", "代码", "名称", "信号", "最新价", "触发次数", "首次触发", "最后触发"]
+            df_display = df_display[cols_to_show]
+            
+            st.dataframe(
+                df_display, 
+                use_container_width=True, 
+                hide_index=True,
+                column_config={
+                    "首次触发": st.column_config.TextColumn("首次触发", width="medium"),
+                    "最后触发": st.column_config.TextColumn("最后触发", width="medium"),
+                    "触发次数": st.column_config.NumberColumn("触发次数", format="%d次"),
+                }
+            )
+            
+            # 下载按钮
+            csv = df_display.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(
+                label="📥 下载历史记录 (CSV)",
+                data=csv,
+                file_name=f"watchlist_history_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv",
+                type="primary"
+            )
+        else:
+            st.info("暂无历史记录。当监控到金叉/死叉信号时，系统会自动保存。")
 
 def main():
     """主函数"""
@@ -2228,7 +2977,20 @@ def main():
     st.title("📊 A股财务分析系统")
     st.markdown("*基于审计意见与三大核心指标的智能筛选*")
     
+    # ==========================================
+    # 侧边栏 - 功能导航 (置顶)
+    # ==========================================
+    st.sidebar.title("功能导航")
+    page = st.sidebar.radio(
+        "选择功能",
+        ["💰 市赚率估值分析", "👀 盯盘助手", "🔎 单项分析", "📊 全网筛选 (Pro)", "🕘 历史记录"]
+    )
+    
+    st.sidebar.divider()
+    
+    # ==========================================
     # 侧边栏 - 系统配置
+    # ==========================================
     with st.sidebar:
         st.header("⚙️ 系统配置")
         
@@ -2388,21 +3150,26 @@ def main():
             help="开启后显示详细调试信息和缓存统计"
         )
     
-    # 主内容区 - 标签页
-    tab1, tab2, tab3, tab4 = st.tabs(["🔎 单项分析", "💰 市赚率估值", "🌐 全网筛选", "🕘 历史记录"])
-
-    with tab1:
-        page_single_analysis()
-
-    with tab2:
+    # ==========================================
+    # 主内容区 - 页面路由
+    # ==========================================
+    if page == "💰 市赚率估值分析":
         page_pr_valuation()
-
-    with tab3:
+    elif page == "👀 盯盘助手":
+        page_watchlist()
+    elif page == "🔎 单项分析":
+        page_single_analysis()
+    elif page == "📊 全网筛选 (Pro)":
         page_full_market_screening()
-
-    with tab4:
+    elif page == "🕘 历史记录":
         page_history()
 
 
 if __name__ == "__main__":
+    st.set_page_config(
+        page_title="A股价值投资分析工具",
+        page_icon="📈",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
     main()

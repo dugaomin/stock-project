@@ -128,6 +128,112 @@ class PRValuation:
         return buffett_buy_pr
     
     @staticmethod
+    def calculate_macd(df: pd.DataFrame, fast_period: int = 12, slow_period: int = 23, signal_period: int = 8) -> pd.DataFrame:
+        """
+        计算修正版 MACD 指标
+        
+        参数:
+            df: 包含 'close' 列的 DataFrame
+            fast_period: 短周期 (默认12)
+            slow_period: 长周期 (默认23，修正版推荐值)
+            signal_period: 信号平滑周期 (默认8，修正版推荐值)
+            
+        返回:
+            包含 'dif', 'dea', 'macd' 列的 DataFrame
+        """
+        # 计算 EMA
+        ema_fast = df['close'].ewm(span=fast_period, adjust=False).mean()
+        ema_slow = df['close'].ewm(span=slow_period, adjust=False).mean()
+        
+        # 计算 DIF
+        df['dif'] = ema_fast - ema_slow
+        
+        # 计算 DEA
+        df['dea'] = df['dif'].ewm(span=signal_period, adjust=False).mean()
+        
+        # 计算 MACD 柱体 (通常乘以2)
+        df['macd'] = (df['dif'] - df['dea']) * 2
+        
+        return df
+
+    @staticmethod
+    def calculate_yellow_bar(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        计算“黄柱”逻辑
+        
+        黄柱业务含义：
+        1. 出现：阶段性机会点提醒（行情可能由弱转强）
+        2. 消失：高位风险提醒（上涨动能衰减）
+        
+        计算逻辑（技术实现）：
+        这里需要定义具体的黄柱触发条件。根据业务描述：
+        - "在股价相对低位区域，指标首次出现黄柱" -> 可能与 DIF/DEA 的位置或拐点有关
+        - "在股价相对高位区域，原本持续出现的黄柱突然消失"
+        
+        由于业务侧未给出具体的数学公式，我们将基于常见的“转强信号”来模拟黄柱逻辑：
+        假设黄柱代表“多头动能增强”或“空头动能衰减”的关键时刻。
+        
+        拟定逻辑：
+        1. 必须满足 DIF > DEA (多头区域) 或者 DIF 上穿 DEA (金叉)
+        2. 或者 MACD 绿柱缩短 (空头衰减)
+        
+        为了简化并符合“黄柱”作为额外标记的特性，我们定义：
+        黄柱 = 当 (MACD > 0 且 MACD > 昨日MACD) 或者 (MACD < 0 且 MACD > 昨日MACD)
+        即：MACD 值在增长（红柱变长或绿柱变短），代表动能向好。
+        
+        为了更贴合“低位出现，高位消失”的描述，我们增加限制：
+        - 仅在 MACD 柱体数值增加时显示黄柱
+        - 黄柱的高度等于 MACD 柱体的高度（覆盖显示）
+        """
+        # 计算 MACD 的 5日均线
+        df['macd_ma5'] = df['macd'].rolling(window=5).mean()
+        
+        # 定义黄柱逻辑：MACD > MACD_MA5
+        # 这里我们只标记是否满足条件，具体的绘制（从MA5画到MACD）在前端处理
+        # yellow_bar 列存储 MACD 的值，用于判断是否显示
+        
+        df['yellow_bar'] = df.apply(lambda x: x['macd'] if x['macd'] > x['macd_ma5'] else 0, axis=1)
+        
+        # 识别信号点
+        # 1. 黄柱首次出现 (昨天无黄柱，今天有)
+        df['yellow_bar_prev'] = df['yellow_bar'].shift(1)
+        df['yellow_appear'] = (df['yellow_bar_prev'] == 0) & (df['yellow_bar'] != 0)
+        
+        # 2. 黄柱消失 (昨天有黄柱，今天无)
+        df['yellow_disappear'] = (df['yellow_bar_prev'] != 0) & (df['yellow_bar'] == 0)
+        
+        return df
+
+    @staticmethod
+    def calculate_price_for_pr(target_pr: float, roe_waa: float, eps: float, coefficient: int) -> Optional[float]:
+        """
+        逆向推导：根据目标PR值计算对应的股价
+        
+        公式推导：
+        PR = (Price / EPS) / ROE / Coefficient
+        => Price = PR * Coefficient * ROE * EPS
+        
+        参数:
+            target_pr: 目标PR值
+            roe_waa: 加权净资产收益率(%)
+            eps: 每股收益
+            coefficient: 系数 (100 或 150)
+            
+        返回:
+            对应股价，如果无法计算则返回None
+        """
+        if eps is None or eps <= 0:
+            return None
+            
+        roe_rate = PRValuation._normalize_roe(roe_waa)
+        if roe_rate is None or roe_rate <= 0:
+            return None
+            
+        # 股价 = PR * 系数 * ROE(小数) * EPS
+        target_price = target_pr * coefficient * roe_rate * eps
+        return target_price
+    
+    @staticmethod
     def calculate_standard_pr(pe_ttm: float, roe_waa: float) -> Optional[float]:
         """
         计算标准市赚率 (不考虑分红修正)

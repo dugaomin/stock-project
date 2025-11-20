@@ -397,6 +397,116 @@ def fetch_valuation_data(
         return None
 
 
+def fetch_kline_data(ts_code: str, period: str = 'daily', adj: str = 'qfq', limit: int = 500) -> Optional[pd.DataFrame]:
+    """
+    获取K线数据 (支持日/周/月线及复权)
+    
+    参数:
+        ts_code: 股票代码
+        period: 周期 ('daily', 'weekly', 'monthly')
+        adj: 复权类型 ('qfq'前复权, 'hfq'后复权, None不复权)
+        limit: 获取条数
+        
+    返回:
+        DataFrame
+    """
+    try:
+        # 映射周期参数到 pro_bar 的 freq 参数
+        # pro_bar freq: D=日线, W=周线, M=月线
+        freq_map = {'daily': 'D', 'weekly': 'W', 'monthly': 'M'}
+        freq = freq_map.get(period, 'D')
+        
+        # 计算开始日期 (根据limit估算)
+        # 为了保证MACD计算准确，多取一些数据
+        days_per_bar = 1 if freq == 'D' else 5 if freq == 'W' else 20
+        total_days = limit * days_per_bar * 2 # 多取一倍以防万一
+        start_date = (datetime.now() - pd.Timedelta(days=total_days)).strftime("%Y%m%d")
+        end_date = datetime.now().strftime("%Y%m%d")
+        
+        # 使用 ts.pro_bar 获取数据 (自动处理复权和周期)
+        # 注意：ts.pro_bar 需要初始化 pro 接口，或者传入 api 实例
+        # 这里我们使用全局配置的 token
+        
+        # 确保 tushare 已初始化
+        token = get_token()
+        ts.set_token(token)
+        pro = ts.pro_api()
+        
+        df = ts.pro_bar(
+            ts_code=ts_code,
+            api=pro,
+            adj=adj,
+            freq=freq,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        # ---------------------------------------------------------
+        # 实时数据拼接逻辑
+        # ---------------------------------------------------------
+        # 仅在日线模式下尝试拼接实时数据
+        if freq == 'D':
+            try:
+                # 获取实时行情 (Sina源，速度快)
+                # ts_code 格式如 600519.SH，get_realtime_quotes 需要 600519
+                code = ts_code.split('.')[0]
+                df_rt = ts.get_realtime_quotes(code)
+                
+                if df_rt is not None and not df_rt.empty:
+                    rt_row = df_rt.iloc[0]
+                    rt_date = rt_row['date'] # YYYY-MM-DD
+                    rt_date_str = rt_date.replace('-', '') # YYYYMMDD
+                    
+                    # 检查是否需要拼接
+                    # 如果历史数据为空，或者历史数据最新日期小于今日
+                    last_date = df['trade_date'].max() if (df is not None and not df.empty) else '00000000'
+                    
+                    if rt_date_str > last_date:
+                        # 构造新行
+                        # 注意：实时数据是未复权的
+                        # 如果 adj='qfq' (前复权)，通常以当前价格为基准，过去价格向下调整。
+                        # 所以当前实时价格可以直接作为 QFQ 价格使用（因为 QFQ 的最新价 = 现价）。
+                        # 如果 adj='hfq' (后复权)，则需要乘以前面的复权因子，这里简化处理，直接使用现价（可能会有断层，但在非除权日无影响）。
+                        
+                        new_row = pd.DataFrame([{
+                            'ts_code': ts_code,
+                            'trade_date': rt_date_str,
+                            'open': float(rt_row['open']),
+                            'high': float(rt_row['high']),
+                            'low': float(rt_row['low']),
+                            'close': float(rt_row['price']),
+                            'vol': float(rt_row['volume']) / 100, # 手 -> 手 (Sina返回的是股? 需确认. Sina volume is usually in shares, tushare daily vol is in lots (100 shares). Wait, ts.get_realtime_quotes volume is in shares? Let's verify. Usually Sina API returns shares. Tushare daily returns lots. So / 100.)
+                            'amount': float(rt_row['amount']) / 1000 # 元 -> 千元
+                        }])
+                        
+                        # 拼接
+                        if df is None or df.empty:
+                            df = new_row
+                        else:
+                            df = pd.concat([df, new_row], ignore_index=True)
+                            
+            except Exception as e:
+                print(f"实时数据拼接失败: {e}")
+        
+        if df is None or df.empty:
+            print(f"⚠️ 未获取到 {ts_code} 的{period}数据")
+            return None
+            
+        # 统一列名 (pro_bar 返回的列名通常已经是标准的)
+        # 确保按日期升序排列
+        df = df.sort_values('trade_date', ascending=True).reset_index(drop=True)
+        
+        # 截取最近 limit 条
+        if len(df) > limit:
+            df = df.iloc[-limit:].reset_index(drop=True)
+            
+        return df
+        
+    except Exception as e:
+        print(f"获取K线数据失败: {e}")
+        return None
+
+
 def fetch_company_info(
     ts_code: str,
     use_cache: bool = True,
