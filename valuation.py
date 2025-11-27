@@ -128,7 +128,7 @@ class PRValuation:
         return buffett_buy_pr
     
     @staticmethod
-    def calculate_macd(df: pd.DataFrame, fast_period: int = 12, slow_period: int = 23, signal_period: int = 8) -> pd.DataFrame:
+    def calculate_macd(df: pd.DataFrame, fast_period: int = 10, slow_period: int = 23, signal_period: int = 8) -> pd.DataFrame:
         """
         计算修正版 MACD 指标
         

@@ -1,5 +1,2370 @@
 [
   {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "601336.SH",
+    "name": "新华保险",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 65.65,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600132.SH",
+    "name": "重庆啤酒",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 53.01,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "601628.SH",
+    "name": "中国人寿",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 43.95,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600873.SH",
+    "name": "梅花生物",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 10.14,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "002612.SZ",
+    "name": "朗姿股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 20.44,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "000921.SZ",
+    "name": "海信家电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 26.59,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600011.SH",
+    "name": "华能国际",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.92,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600210.SH",
+    "name": "紫江企业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.25,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600866.SH",
+    "name": "星湖科技",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.84,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600036.SH",
+    "name": "招商银行",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 43.19,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600285.SH",
+    "name": "羚锐制药",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 22.02,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "603565.SH",
+    "name": "中谷物流",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 10.3,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "601601.SH",
+    "name": "中国太保",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 35.05,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600066.SH",
+    "name": "宇通客车",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.86,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "601319.SH",
+    "name": "中国人保",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 8.67,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "603766.SH",
+    "name": "隆鑫通用",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.3,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "000899.SZ",
+    "name": "赣能股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 9.93,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "002847.SZ",
+    "name": "盐津铺子",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 72.55,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "601168.SH",
+    "name": "西部矿业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 22.79,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "605499.SH",
+    "name": "东鹏饮料",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 258.59,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "000429.SZ",
+    "name": "粤高速A",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 12.15,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "000791.SZ",
+    "name": "甘肃能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.54,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "603816.SH",
+    "name": "顾家家居",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 31.2,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600968.SH",
+    "name": "海油发展",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 3.73,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600096.SH",
+    "name": "云天化",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.66,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600863.SH",
+    "name": "内蒙华电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 4.56,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "002043.SZ",
+    "name": "兔宝宝",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 13.62,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "300972.SZ",
+    "name": "万辰集团",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 173.24,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "601991.SH",
+    "name": "大唐发电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 3.55,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "605117.SH",
+    "name": "德业股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 77.89,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "002056.SZ",
+    "name": "横店东磁",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 18.68,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600961.SH",
+    "name": "株冶集团",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.68,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "002128.SZ",
+    "name": "电投能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 25.98,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "603993.SH",
+    "name": "洛阳钼业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 15.95,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "603551.SH",
+    "name": "奥普科技",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 11.98,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600578.SH",
+    "name": "京能电力",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 4.53,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600887.SH",
+    "name": "伊利股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 29.05,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600012.SH",
+    "name": "皖通高速",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 15.61,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "000600.SZ",
+    "name": "建投能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 8.12,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "601899.SH",
+    "name": "紫金矿业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 28.6,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "000975.SZ",
+    "name": "山金国际",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 20.94,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "002749.SZ",
+    "name": "国光股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 13.98,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "000933.SZ",
+    "name": "神火股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 24.1,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600938.SH",
+    "name": "中国海油",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 28.08,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600598.SH",
+    "name": "北大荒",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.62,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "300573.SZ",
+    "name": "兴齐眼药",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 71.04,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600398.SH",
+    "name": "海澜之家",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.12,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:33",
+    "date": "20251127",
+    "code": "600660.SH",
+    "name": "福耀玻璃",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 64.55,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:38"
+  },
+  {
+    "time": "2025-11-27 15:34:17",
+    "date": "20251127",
+    "code": "605499.SH",
+    "name": "东鹏饮料",
+    "signal_type": "gold_cross",
+    "signal_desc": "MACD金叉",
+    "price": 258.59,
+    "trigger_count": 3,
+    "last_time": "2025-11-27 15:46:27"
+  },
+  {
+    "time": "2025-11-25 09:05:20",
+    "date": "20251125",
+    "code": "601336.SH",
+    "name": "新华保险",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 65.88,
+    "trigger_count": 11,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:05:20",
+    "date": "20251125",
+    "code": "600132.SH",
+    "name": "重庆啤酒",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 53.4,
+    "trigger_count": 11,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:05:20",
+    "date": "20251125",
+    "code": "601628.SH",
+    "name": "中国人寿",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 43.99,
+    "trigger_count": 11,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:05:20",
+    "date": "20251125",
+    "code": "600873.SH",
+    "name": "梅花生物",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 10.2,
+    "trigger_count": 11,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:05:13",
+    "date": "20251125",
+    "code": "603551.SH",
+    "name": "奥普科技",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 0.0,
+    "trigger_count": 8,
+    "last_time": "2025-11-25 09:22:28"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "002612.SZ",
+    "name": "朗姿股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 20.64,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "000921.SZ",
+    "name": "海信家电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 26.3,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600011.SH",
+    "name": "华能国际",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.71,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600210.SH",
+    "name": "紫江企业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.33,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600866.SH",
+    "name": "星湖科技",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.8,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600036.SH",
+    "name": "招商银行",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 43.25,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600285.SH",
+    "name": "羚锐制药",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 22.23,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "603565.SH",
+    "name": "中谷物流",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 10.27,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "601601.SH",
+    "name": "中国太保",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 34.95,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600066.SH",
+    "name": "宇通客车",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.89,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "601319.SH",
+    "name": "中国人保",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 8.64,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "603766.SH",
+    "name": "隆鑫通用",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 13.86,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "000899.SZ",
+    "name": "赣能股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 9.72,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "002847.SZ",
+    "name": "盐津铺子",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 72.48,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "601168.SH",
+    "name": "西部矿业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 22.73,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "605499.SH",
+    "name": "东鹏饮料",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 258.39,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "000429.SZ",
+    "name": "粤高速A",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 12.15,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "000791.SZ",
+    "name": "甘肃能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.51,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "603816.SH",
+    "name": "顾家家居",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.74,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600968.SH",
+    "name": "海油发展",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 3.73,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600096.SH",
+    "name": "云天化",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.5,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600863.SH",
+    "name": "内蒙华电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 4.45,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "002043.SZ",
+    "name": "兔宝宝",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 13.8,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "300972.SZ",
+    "name": "万辰集团",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 168.41,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "601991.SH",
+    "name": "大唐发电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 3.44,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "605117.SH",
+    "name": "德业股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 79.01,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "002056.SZ",
+    "name": "横店东磁",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 18.85,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600961.SH",
+    "name": "株冶集团",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.76,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "002128.SZ",
+    "name": "电投能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 26.38,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "603993.SH",
+    "name": "洛阳钼业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 15.97,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "603551.SH",
+    "name": "奥普科技",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 12.55,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600578.SH",
+    "name": "京能电力",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 4.44,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600887.SH",
+    "name": "伊利股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 29.16,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600012.SH",
+    "name": "皖通高速",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 15.67,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:23"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "000600.SZ",
+    "name": "建投能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 8.04,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "601899.SH",
+    "name": "紫金矿业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 28.51,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "000975.SZ",
+    "name": "山金国际",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 20.64,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "002749.SZ",
+    "name": "国光股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 13.92,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "000933.SZ",
+    "name": "神火股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 24.31,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600938.SH",
+    "name": "中国海油",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 28.16,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600598.SH",
+    "name": "北大荒",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.92,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "300573.SZ",
+    "name": "兴齐眼药",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 71.44,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600398.SH",
+    "name": "海澜之家",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.09,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:33",
+    "date": "20251125",
+    "code": "600660.SH",
+    "name": "福耀玻璃",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 64.45,
+    "trigger_count": 12,
+    "last_time": "2025-11-25 15:00:24"
+  },
+  {
+    "time": "2025-11-25 09:00:32",
+    "date": "20251125",
+    "code": "600598.SH",
+    "name": "北大荒",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 14.8,
+    "trigger_count": 37,
+    "last_time": "2025-11-25 11:19:19"
+  },
+  {
+    "time": "2025-11-25 09:00:27",
+    "date": "20251125",
+    "code": "600887.SH",
+    "name": "伊利股份",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 0.0,
+    "trigger_count": 9,
+    "last_time": "2025-11-25 09:22:30"
+  },
+  {
+    "time": "2025-11-25 09:00:14",
+    "date": "20251125",
+    "code": "603766.SH",
+    "name": "隆鑫通用",
+    "signal_type": "gold_cross",
+    "signal_desc": "MACD金叉",
+    "price": 13.86,
+    "trigger_count": 32,
+    "last_time": "2025-11-25 15:00:09"
+  },
+  {
+    "time": "2025-11-24 10:37:06",
+    "date": "20251124",
+    "code": "603816.SH",
+    "name": "顾家家居",
+    "signal_type": "gold_cross",
+    "signal_desc": "MACD金叉",
+    "price": 30.78,
+    "trigger_count": 1,
+    "last_time": "2025-11-24 10:37:06"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "601336.SH",
+    "name": "新华保险",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 64.74,
+    "trigger_count": 411,
+    "last_time": "2025-11-25 09:00:33"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600132.SH",
+    "name": "重庆啤酒",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 53.68,
+    "trigger_count": 411,
+    "last_time": "2025-11-25 09:00:33"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "601628.SH",
+    "name": "中国人寿",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 43.12,
+    "trigger_count": 411,
+    "last_time": "2025-11-25 09:00:33"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600873.SH",
+    "name": "梅花生物",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 10.13,
+    "trigger_count": 411,
+    "last_time": "2025-11-25 09:00:33"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "002612.SZ",
+    "name": "朗姿股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 20.55,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "000921.SZ",
+    "name": "海信家电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 26.4,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600011.SH",
+    "name": "华能国际",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.65,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600210.SH",
+    "name": "紫江企业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.22,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600866.SH",
+    "name": "星湖科技",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.77,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600036.SH",
+    "name": "招商银行",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 42.63,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600285.SH",
+    "name": "羚锐制药",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 22.3,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "603565.SH",
+    "name": "中谷物流",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 10.26,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "601601.SH",
+    "name": "中国太保",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 34.3,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600066.SH",
+    "name": "宇通客车",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 31.42,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "601319.SH",
+    "name": "中国人保",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 8.32,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "603766.SH",
+    "name": "隆鑫通用",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 13.65,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "000899.SZ",
+    "name": "赣能股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 9.7,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "002847.SZ",
+    "name": "盐津铺子",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 72.09,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "601168.SH",
+    "name": "西部矿业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 22.06,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "605499.SH",
+    "name": "东鹏饮料",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 257.9,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "000429.SZ",
+    "name": "粤高速A",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 12.14,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "000791.SZ",
+    "name": "甘肃能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.52,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "603816.SH",
+    "name": "顾家家居",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.2,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600968.SH",
+    "name": "海油发展",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 3.76,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600096.SH",
+    "name": "云天化",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.11,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600863.SH",
+    "name": "内蒙华电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 4.43,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "002043.SZ",
+    "name": "兔宝宝",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 13.64,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "300972.SZ",
+    "name": "万辰集团",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 167.77,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "601991.SH",
+    "name": "大唐发电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 3.43,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "605117.SH",
+    "name": "德业股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 79.0,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "002056.SZ",
+    "name": "横店东磁",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 18.63,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600961.SH",
+    "name": "株冶集团",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.51,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "002128.SZ",
+    "name": "电投能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 26.11,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "603993.SH",
+    "name": "洛阳钼业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 15.35,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "603551.SH",
+    "name": "奥普科技",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 12.79,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600578.SH",
+    "name": "京能电力",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 4.41,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600887.SH",
+    "name": "伊利股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 28.91,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600012.SH",
+    "name": "皖通高速",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 15.28,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "000600.SZ",
+    "name": "建投能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.96,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "601899.SH",
+    "name": "紫金矿业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 28.0,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "000975.SZ",
+    "name": "山金国际",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 20.11,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "002749.SZ",
+    "name": "国光股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.32,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "000933.SZ",
+    "name": "神火股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 24.04,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600938.SH",
+    "name": "中国海油",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 28.0,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600598.SH",
+    "name": "北大荒",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.78,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "300573.SZ",
+    "name": "兴齐眼药",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 69.12,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600398.SH",
+    "name": "海澜之家",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.11,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:23",
+    "date": "20251124",
+    "code": "600660.SH",
+    "name": "福耀玻璃",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 63.66,
+    "trigger_count": 410,
+    "last_time": "2025-11-25 08:59:50"
+  },
+  {
+    "time": "2025-11-24 09:03:22",
+    "date": "20251124",
+    "code": "600398.SH",
+    "name": "海澜之家",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 6.11,
+    "trigger_count": 426,
+    "last_time": "2025-11-25 08:59:49"
+  },
+  {
+    "time": "2025-11-24 09:03:21",
+    "date": "20251124",
+    "code": "600598.SH",
+    "name": "北大荒",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 14.73,
+    "trigger_count": 6,
+    "last_time": "2025-11-24 11:28:29"
+  },
+  {
+    "time": "2025-11-24 09:03:17",
+    "date": "20251124",
+    "code": "600887.SH",
+    "name": "伊利股份",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 0.0,
+    "trigger_count": 5,
+    "last_time": "2025-11-24 09:25:02"
+  },
+  {
+    "time": "2025-11-24 09:03:16",
+    "date": "20251124",
+    "code": "603551.SH",
+    "name": "奥普科技",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 0.0,
+    "trigger_count": 5,
+    "last_time": "2025-11-24 09:25:02"
+  },
+  {
+    "time": "2025-11-24 09:03:03",
+    "date": "20251124",
+    "code": "600036.SH",
+    "name": "招商银行",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 42.63,
+    "trigger_count": 464,
+    "last_time": "2025-11-25 08:59:22"
+  },
+  {
+    "time": "2025-11-21 14:30:26",
+    "date": "20251121",
+    "code": "600961.SH",
+    "name": "株冶集团",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 14.46,
+    "trigger_count": 727,
+    "last_time": "2025-11-24 08:57:45"
+  },
+  {
+    "time": "2025-11-21 14:30:18",
+    "date": "20251121",
+    "code": "603816.SH",
+    "name": "顾家家居",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 30.35,
+    "trigger_count": 1,
+    "last_time": "2025-11-21 14:30:18"
+  },
+  {
+    "time": "2025-11-21 09:26:13",
+    "date": "20251121",
+    "code": "603816.SH",
+    "name": "顾家家居",
+    "signal_type": "gold_cross",
+    "signal_desc": "MACD金叉",
+    "price": 30.7,
+    "trigger_count": 7,
+    "last_time": "2025-11-21 13:40:33"
+  },
+  {
+    "time": "2025-11-21 09:26:10",
+    "date": "20251121",
+    "code": "601319.SH",
+    "name": "中国人保",
+    "signal_type": "gold_cross",
+    "signal_desc": "MACD金叉",
+    "price": 8.81,
+    "trigger_count": 5,
+    "last_time": "2025-11-21 09:56:58"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "601336.SH",
+    "name": "新华保险",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 65.4,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600132.SH",
+    "name": "重庆啤酒",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 53.46,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "601628.SH",
+    "name": "中国人寿",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 43.48,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600873.SH",
+    "name": "梅花生物",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 10.37,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "002612.SZ",
+    "name": "朗姿股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 20.62,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "000921.SZ",
+    "name": "海信家电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 26.04,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600011.SH",
+    "name": "华能国际",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.72,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600210.SH",
+    "name": "紫江企业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.12,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600866.SH",
+    "name": "星湖科技",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.8,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600036.SH",
+    "name": "招商银行",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 43.0,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600285.SH",
+    "name": "羚锐制药",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 22.14,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "603565.SH",
+    "name": "中谷物流",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 10.15,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "601601.SH",
+    "name": "中国太保",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 34.63,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600066.SH",
+    "name": "宇通客车",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.59,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "601319.SH",
+    "name": "中国人保",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 8.55,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "603766.SH",
+    "name": "隆鑫通用",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 13.04,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "000899.SZ",
+    "name": "赣能股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 9.74,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "002847.SZ",
+    "name": "盐津铺子",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 73.0,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "601168.SH",
+    "name": "西部矿业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 22.19,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "605499.SH",
+    "name": "东鹏饮料",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 259.96,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "000429.SZ",
+    "name": "粤高速A",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 12.06,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "000791.SZ",
+    "name": "甘肃能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.5,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "603816.SH",
+    "name": "顾家家居",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.28,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600968.SH",
+    "name": "海油发展",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 3.76,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600096.SH",
+    "name": "云天化",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 30.85,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600863.SH",
+    "name": "内蒙华电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 4.46,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "002043.SZ",
+    "name": "兔宝宝",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 13.65,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "300972.SZ",
+    "name": "万辰集团",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 166.61,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "601991.SH",
+    "name": "大唐发电",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 3.47,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "605117.SH",
+    "name": "德业股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 76.4,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "002056.SZ",
+    "name": "横店东磁",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 18.47,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600961.SH",
+    "name": "株冶集团",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.46,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "002128.SZ",
+    "name": "电投能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 25.89,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "603993.SH",
+    "name": "洛阳钼业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 15.18,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "603551.SH",
+    "name": "奥普科技",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 12.21,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600578.SH",
+    "name": "京能电力",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 4.46,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600887.SH",
+    "name": "伊利股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 29.1,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600012.SH",
+    "name": "皖通高速",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 15.27,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "000600.SZ",
+    "name": "建投能源",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 7.97,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "601899.SH",
+    "name": "紫金矿业",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 28.14,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "000975.SZ",
+    "name": "山金国际",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 20.35,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "002749.SZ",
+    "name": "国光股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.25,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "000933.SZ",
+    "name": "神火股份",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 24.37,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600938.SH",
+    "name": "中国海油",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 28.91,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600598.SH",
+    "name": "北大荒",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 14.84,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "300573.SZ",
+    "name": "兴齐眼药",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 68.22,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600398.SH",
+    "name": "海澜之家",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 6.28,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:46",
+    "date": "20251121",
+    "code": "600660.SH",
+    "name": "福耀玻璃",
+    "signal_type": "market_close",
+    "signal_desc": "收盘价",
+    "price": 64.03,
+    "trigger_count": 655,
+    "last_time": "2025-11-24 08:57:53"
+  },
+  {
+    "time": "2025-11-21 09:04:45",
+    "date": "20251121",
+    "code": "600398.SH",
+    "name": "海澜之家",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 0.0,
+    "trigger_count": 4,
+    "last_time": "2025-11-21 09:20:59"
+  },
+  {
+    "time": "2025-11-21 09:04:44",
+    "date": "20251121",
+    "code": "600598.SH",
+    "name": "北大荒",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 0.0,
+    "trigger_count": 4,
+    "last_time": "2025-11-21 09:20:58"
+  },
+  {
+    "time": "2025-11-21 09:04:43",
+    "date": "20251121",
+    "code": "002749.SZ",
+    "name": "国光股份",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 14.25,
+    "trigger_count": 778,
+    "last_time": "2025-11-24 08:57:50"
+  },
+  {
+    "time": "2025-11-21 09:04:41",
+    "date": "20251121",
+    "code": "600887.SH",
+    "name": "伊利股份",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 0.0,
+    "trigger_count": 4,
+    "last_time": "2025-11-21 09:20:55"
+  },
+  {
+    "time": "2025-11-21 09:04:40",
+    "date": "20251121",
+    "code": "603551.SH",
+    "name": "奥普科技",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 0.0,
+    "trigger_count": 4,
+    "last_time": "2025-11-21 09:20:54"
+  },
+  {
+    "time": "2025-11-21 09:04:29",
+    "date": "20251121",
+    "code": "600036.SH",
+    "name": "招商银行",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 43.09,
+    "trigger_count": 5,
+    "last_time": "2025-11-21 14:30:07"
+  },
+  {
+    "time": "2025-11-21 09:04:27",
+    "date": "20251121",
+    "code": "002612.SZ",
+    "name": "朗姿股份",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 20.62,
+    "trigger_count": 729,
+    "last_time": "2025-11-24 08:57:33"
+  },
+  {
+    "time": "2025-11-21 09:04:26",
+    "date": "20251121",
+    "code": "600132.SH",
+    "name": "重庆啤酒",
+    "signal_type": "death_cross",
+    "signal_desc": "MACD死叉",
+    "price": 53.46,
+    "trigger_count": 733,
+    "last_time": "2025-11-24 08:57:31"
+  },
+  {
     "time": "2025-11-20 15:45:42",
     "date": "20251120",
     "code": "601336.SH",
@@ -7,8 +2372,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 67.8,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -18,8 +2383,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 54.07,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -29,8 +2394,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 44.4,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -40,8 +2405,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 10.62,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -51,8 +2416,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 21.96,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -62,8 +2427,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 26.25,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -73,8 +2438,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 7.86,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -84,8 +2449,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 7.4,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -95,8 +2460,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 6.99,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -106,8 +2471,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 43.23,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:20"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -117,8 +2482,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 22.45,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -128,8 +2493,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 10.35,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -139,8 +2504,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 35.54,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -150,8 +2515,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 31.1,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -161,8 +2526,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 8.83,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -172,8 +2537,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 13.01,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -183,8 +2548,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 10.11,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -194,8 +2559,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 74.79,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -205,8 +2570,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 23.21,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -216,8 +2581,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 256.54,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -227,8 +2592,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 12.25,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -238,8 +2603,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 6.68,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -249,8 +2614,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 30.9,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -260,8 +2625,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 3.87,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -271,8 +2636,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 32.4,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -282,8 +2647,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 4.49,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -293,8 +2658,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 13.9,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -304,8 +2669,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 168.22,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -315,8 +2680,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 3.57,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -326,8 +2691,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 78.1,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -337,8 +2702,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 19.37,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -348,8 +2713,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 15.24,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -359,8 +2724,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 26.64,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -370,8 +2735,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 15.79,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -381,8 +2746,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 11.98,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -392,8 +2757,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 4.57,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -403,8 +2768,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 29.4,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -414,8 +2779,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 15.31,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -425,8 +2790,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 8.24,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -436,8 +2801,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 28.97,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -447,8 +2812,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 20.85,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -458,8 +2823,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 14.63,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -469,8 +2834,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 24.91,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -480,8 +2845,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 29.2,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -491,8 +2856,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 14.95,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -502,8 +2867,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 71.15,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -513,8 +2878,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 6.36,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 15:45:42",
@@ -524,8 +2889,8 @@
     "signal_type": "market_close",
     "signal_desc": "收盘价",
     "price": 64.81,
-    "trigger_count": 25,
-    "last_time": "2025-11-20 17:58:29"
+    "trigger_count": 190,
+    "last_time": "2025-11-21 08:59:21"
   },
   {
     "time": "2025-11-20 13:55:24",
@@ -535,8 +2900,8 @@
     "signal_type": "death_cross",
     "signal_desc": "MACD死叉",
     "price": 29.2,
-    "trigger_count": 42,
-    "last_time": "2025-11-20 17:58:17"
+    "trigger_count": 207,
+    "last_time": "2025-11-21 08:59:19"
   },
   {
     "time": "2025-11-20 11:31:03",
@@ -568,8 +2933,8 @@
     "signal_type": "death_cross",
     "signal_desc": "MACD死叉",
     "price": 74.79,
-    "last_time": "2025-11-20 17:57:59",
-    "trigger_count": 72
+    "last_time": "2025-11-21 08:59:07",
+    "trigger_count": 237
   },
   {
     "time": "2025-11-20 10:50:56",

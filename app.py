@@ -109,10 +109,10 @@ def normalize_ts_code(raw_code: str, target_type: str) -> str:
 if 'debug_mode' not in st.session_state:
     st.session_state.debug_mode = False
 if 'start_year' not in st.session_state or 'end_year' not in st.session_state:
-    # 使用智能年份计算：根据当前月份判断最近5年
-    start_year, end_year = calculate_recent_years(required_years=5)
-    st.session_state.start_year = start_year
-    st.session_state.end_year = end_year
+    # 默认使用全量历史数据策略（1990-2999），让数据源返回所有可用数据
+    # 这样可以避免因年份计算问题导致的数据不足
+    st.session_state.start_year = 1990
+    st.session_state.end_year = 2999
 if 'selected_sector' not in st.session_state:
     st.session_state.selected_sector = "消费"
 if 'ocf_consecutive_years' not in st.session_state:
@@ -734,12 +734,14 @@ def page_single_analysis():
             st.error("请填写股票代码")
             return
         
-        # 计算日期范围
-        start_date = f"{st.session_state.start_year}0101"
-        end_date = f"{st.session_state.end_year}1231"
+        # 策略优化：强制使用全量日期范围 (1990-2999)
+        # 原因：避免因指定特定年份范围（如2024年报未出）导致的数据获取失败
+        # 我们先获取所有数据，然后在展示层根据用户选择的年份进行过滤
+        fetch_start_date = "19900101"
+        fetch_end_date = "29991231"
         
-        # 显示实际使用的年份范围（调试信息）
-        st.info(f"📅 查询年份范围：{st.session_state.start_year}年 - {st.session_state.end_year}年 (开始日期: {start_date}, 结束日期: {end_date})")
+        # 显示用户选择的范围（仅作展示）
+        st.info(f"📅 分析年份范围：{st.session_state.start_year}年 - {st.session_state.end_year}年 (系统将自动获取该范围内所有可用数据)")
         
         # 连通性检测
         if st.session_state.debug_mode:
@@ -783,35 +785,13 @@ def page_single_analysis():
                 user_points = st.session_state.user_points_info.get('total_points', 2000)
             
             result = analyze_fundamentals(
-                ts_code, start_date, end_date, 
-                use_cache=True,
+                ts_code, fetch_start_date, fetch_end_date, 
+                use_cache=False,  # 单项分析强制禁用缓存，确保获取最新数据，避免缓存导致的逻辑冲突
                 api_delay=st.session_state.api_delay,
                 progress_callback=update_progress,
                 user_points=user_points  # 传入积分信息，避免重复调用API
             )
             progress_bar.empty()
-            # 如果已收盘，记录每只股票的收盘价作为单独的记录（标记为 market_close）
-            if not is_trading_time:
-                market_close_records = []
-                # 在循环中已收集每只股票的最新信息，存于临时列表 `code_info_list`
-                for info in code_info_list:
-                    code_mc = info['code']
-                    name_mc = info['name']
-                    date_mc = info['date']
-                    price_mc = info['price']
-                    record_mc = {
-                        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "date": date_mc,
-                        "code": code_mc,
-                        "name": name_mc,
-                        "signal_type": "market_close",
-                        "signal_desc": "收盘价",
-                        "price": price_mc
-                    }
-                    if WatchlistHistoryManager.save_record(record_mc):
-                        new_records_count += 1
-                        market_close_records.append(record_mc)
-
             status_text.empty()
             
             # 检查是否使用了缓存（通过判断耗时）
@@ -907,6 +887,33 @@ def page_single_analysis():
         company_info = result.get("company_info", None)
         audit_records = result.get("audit_records", [])
         metrics = result.get("metrics", None)
+        
+        # 数据过滤：只保留用户选择的年份范围（独立逻辑，不影响全网筛选）
+        user_start_year = st.session_state.start_year
+        user_end_year = st.session_state.end_year
+        
+        if metrics is not None and not metrics.empty:
+            # 确保end_date是字符串
+            metrics['end_date'] = metrics['end_date'].astype(str)
+            # 提取年份并转换为整数
+            metrics['year_int'] = metrics['end_date'].str[:4].astype(int)
+            
+            # 过滤数据
+            metrics = metrics[
+                (metrics['year_int'] >= user_start_year) & 
+                (metrics['year_int'] <= user_end_year)
+            ].copy()
+            
+            # 删除临时列
+            metrics = metrics.drop(columns=['year_int'])
+            
+        # 过滤审计记录
+        if audit_records:
+            # 注意：AuditRecord是对象，需要使用属性访问 (.end_date)，而不是下标访问 ['end_date']
+            audit_records = [
+                rec for rec in audit_records 
+                if user_start_year <= int(str(rec.end_date)[:4]) <= user_end_year
+            ]
         
         # 调试信息：显示实际获取到的数据年份
         if metrics is not None and not metrics.empty:
@@ -1571,8 +1578,8 @@ def page_pr_valuation():
                     df_kline['trade_date'] = pd.to_datetime(df_kline['trade_date']).dt.strftime('%Y-%m-%d')
                     df_kline = df_kline.sort_values('trade_date', ascending=True).reset_index(drop=True)
                     
-                    # 计算MACD (修正版参数: 12, 23, 8)
-                    df_kline = PRValuation.calculate_macd(df_kline, fast_period=12, slow_period=23, signal_period=8)
+                    # 计算MACD (修正版参数: 10, 23, 8)
+                    df_kline = PRValuation.calculate_macd(df_kline, fast_period=10, slow_period=23, signal_period=8)
                     
                     # 计算黄柱
                     df_kline = PRValuation.calculate_yellow_bar(df_kline)
@@ -1998,25 +2005,39 @@ def page_full_market_screening():
     # 主显示区
     st.title("🌐 全网智能筛选")
     
-    # 第一步：获取股票列表
+    # 第一步：获取股票列表（每次都重新获取，确保最新）
     st.subheader("📋 第一步：获取股票列表")
     
-    if st.session_state.stock_list is None:
+    # 显示获取按钮（每次都可以重新获取）
+    col1, col2 = st.columns([3, 1])
+    with col1:
         if st.button("🚀 获取全部A股股票列表", type="primary", use_container_width=True):
             with st.spinner("正在获取股票列表..."):
                 try:
                     screener = StockScreener()
                     stock_list = screener.get_a_stock_list(exclude_st=True)
                     st.session_state.stock_list = stock_list
+                    # DEBUG: Filter for 000429.SZ only
+                    # st.session_state.stock_list = stock_list[stock_list['ts_code'] == '000429.SZ']  # Removed debug filter
                     st.success(f"✅ 成功获取 {len(stock_list)} 只A股股票（已排除ST股）")
-                    st.info("💡 股票列表已缓存，可以开始筛选")
+                    st.info("💡 股票列表已加载，可以开始筛选")
                 except Exception as e:
                     st.error(f"❌ 获取股票列表失败：{e}")
                     if st.session_state.debug_mode:
                         st.exception(e)
-    else:
+    
+    with col2:
+        if st.session_state.stock_list is not None:
+            if st.button("🔄 重置", use_container_width=True):
+                st.session_state.stock_list = None
+                st.session_state.screening_results = []
+                st.session_state.screening_in_progress = False
+                st.rerun()
+    
+    # 显示已加载的股票列表信息
+    if st.session_state.stock_list is not None:
         stock_list = st.session_state.stock_list
-        st.success(f"✅ 已缓存 {len(stock_list)} 只A股股票")
+        st.success(f"✅ 已加载 {len(stock_list)} 只A股股票")
         
         # 显示前10只股票作为预览
         with st.expander("📊 股票列表预览（前10只）", expanded=False):
@@ -2036,11 +2057,11 @@ def page_full_market_screening():
         stock_list = st.session_state.stock_list
         total_stocks = len(stock_list)
         
-        # 使用智能年份计算：根据当前月份和年报发布时间判断最近N年
-        start_year, end_year = calculate_recent_years(required_years=years)
+        # 使用全量历史数据策略
+        start_year, end_year = 1990, 2999
         
         # 显示筛选参数
-        st.info(f"📊 筛选参数：年份范围={start_year}年-{end_year}年（智能计算最近{years}年数据），ROE≥{min_roe}%，PR≤{max_pr}")
+        st.info(f"📊 筛选参数：年份范围={start_year}年-{end_year}年（获取所有可用数据，取最近{years}年分析），ROE≥{min_roe}%，PR≤{max_pr}")
         
         # 开始筛选按钮
         if not st.session_state.screening_in_progress:
@@ -2048,15 +2069,15 @@ def page_full_market_screening():
                 # 初始化筛选状态
                 st.session_state.screening_in_progress = True
                 st.session_state.screening_results = []
-                start_time = datetime.now()  # 记录开始时间
+                start_time = datetime.now().timestamp()  # 使用时间戳（更稳定）
                 st.session_state.screening_progress = {
                     'processed': 0,
                     'total': total_stocks,
                     'passed': 0,
                     'failed': 0,
                     'current_index': 0,
-                    'start_time': start_time,  # 记录开始时间
-                    'last_update_time': start_time,  # 记录最后更新时间
+                    'start_time': start_time,  # 存时间戳
+                    'last_update_time': start_time,  # 存时间戳
                     'time_records': []  # 记录每只股票的耗时
                 }
                 st.rerun()
@@ -2069,26 +2090,41 @@ def page_full_market_screening():
             failed = progress['failed']
             start_time = progress.get('start_time')
             if start_time is None:
-                start_time = datetime.now()
+                start_time = datetime.now().timestamp()
                 st.session_state.screening_progress['start_time'] = start_time
+            
+            # 确保start_time是时间戳(float)
+            if isinstance(start_time, datetime):
+                start_time = start_time.timestamp()
             
             last_update_time = progress.get('last_update_time', start_time)
             time_records = progress.get('time_records', [])
             
             # 计算时间信息
-            current_time = datetime.now()
-            elapsed_time = (current_time - start_time).total_seconds()  # 已用时间（秒）
+            current_timestamp = datetime.now().timestamp()
+            
+            # 优先使用累积耗时（更准确，不受start_time重置影响）
+            if time_records:
+                elapsed_time = sum(time_records)
+            else:
+                elapsed_time = current_timestamp - start_time
             
             # 计算平均每只股票耗时
             avg_time_per_stock = 0
-            if processed > 0:
+            if time_records:
+                # 优先使用记录的每只股票耗时计算平均值（更准确）
+                avg_time_per_stock = sum(time_records) / len(time_records)
+            elif processed > 0:
+                # 降级方案：使用总耗时/已处理数量
                 avg_time_per_stock = elapsed_time / processed
             
             # 预估剩余时间
             remaining_stocks = total - processed
             estimated_remaining_time = 0
             if processed > 0 and remaining_stocks > 0:
-                estimated_remaining_time = avg_time_per_stock * remaining_stocks
+                # 如果有平均时间，用平均时间；否则用当前速度
+                if avg_time_per_stock > 0:
+                    estimated_remaining_time = avg_time_per_stock * remaining_stocks
             
             # 格式化时间显示
             def format_time(seconds):
@@ -2106,17 +2142,30 @@ def page_full_market_screening():
                     return f"{hours}小时{minutes}分{secs}秒"
             
             # 美化UI：时间信息卡片
-            st.markdown("---")
-            st.markdown("### ⏱️ 时间统计")
+            # 将时间戳转为datetime对象用于显示
+            start_dt = datetime.fromtimestamp(start_time)
+            
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("🕐 开始时间", start_time.strftime("%H:%M:%S"))
+                st.metric("🕒 开始时间", start_dt.strftime('%H:%M:%S'))
             with col2:
                 st.metric("⏱️ 已用时间", format_time(elapsed_time))
             with col3:
-                st.metric("📊 平均耗时", f"{avg_time_per_stock:.2f}秒/只" if avg_time_per_stock > 0 else "计算中...")
+                if avg_time_per_stock > 0:
+                    avg_text = f"{avg_time_per_stock:.2f}秒"
+                else:
+                    avg_text = "计算中..."
+                st.metric("📊 平均运行", avg_text)
             with col4:
-                st.metric("⏳ 预估剩余", format_time(estimated_remaining_time) if estimated_remaining_time > 0 else "计算中...")
+                # 剩余时间
+                if estimated_remaining_time > 0:
+                    remaining_text = format_time(estimated_remaining_time)
+                elif processed > 0:
+                     # 如果已经开始处理但还没算出剩余时间（极少情况）
+                     remaining_text = "计算中..."
+                else:
+                    remaining_text = "准备中..."
+                st.metric("⏳ 剩余时间", remaining_text)
             
             # 美化UI：进度条和进度信息（使用卡片样式）
             if total > 0:
@@ -2193,10 +2242,10 @@ def page_full_market_screening():
                 st.info(f"🔄 正在处理：{ts_code} ({stock_name}) [{current_index + 1}/{total_stocks}]")
                 
                 try:
-                    # 优化：使用动态获取的年份范围（最近5年数据）
-                    current_year = datetime.now().year  # 获取当前年份（如2025年）
-                    analysis_end_year = current_year  # 结束年份：当前年份（如2025年），查询end_date<=20251231可获取2024年年报
-                    analysis_start_year = current_year - 5  # 开始年份：当前年份-5（如2020年，最近5年）
+                    # 优化：强制使用全量历史数据策略（1990-2999）
+                    # 确保获取所有可用数据，然后由analyze_fundamentals内部逻辑处理
+                    # 彻底解决因年报发布时间判断不准导致的数据不足问题
+                    analysis_start_year, analysis_end_year = 1990, 2999
                     
                     # 从session_state获取积分信息（避免重复调用API）
                     user_points = None
@@ -2215,11 +2264,36 @@ def page_full_market_screening():
                         user_points=user_points  # 传入积分信息，避免重复调用API
                     )
                     
+                    
+                    # DEBUG: 000429.SZ specific logging
+                    if ts_code == '000429.SZ':
+                        st.warning(f"🔍 DEBUG 000429.SZ: Start Analysis")
+                        st.warning(f"📅 Years: {analysis_start_year}-{analysis_end_year} (Required: {years})")
+                        if result:
+                            metrics_debug = result.get('metrics')
+                            audit_debug = result.get('audit_records', [])
+                            st.warning(f"📋 Metrics: {len(metrics_debug) if metrics_debug is not None else 'None'}, Audit: {len(audit_debug)}")
+                            if metrics_debug is not None and not metrics_debug.empty:
+                                st.dataframe(metrics_debug[['end_date', 'n_income', 'n_cashflow_act']].head())
+                        else:
+                            st.error("❌ Result is None")
+
                     if result:
                         audit_records = result.get('audit_records', [])
                         metrics = result.get('metrics')
                         
                         if metrics is not None and not metrics.empty:
+                            # 基本面检查（重要：这里之前缺少了check_fundamentals_pass调用！）
+                            fundamentals_pass, fundamentals_details = screener.check_fundamentals_pass(
+                                audit_records=audit_records,
+                                metrics=metrics,
+                                required_years=years  # 修复：使用required_years参数（默认5年）
+                            )
+                            
+                            if ts_code == '000429.SZ':
+                                st.warning(f"✅ Fundamentals Pass: {fundamentals_pass}")
+                                st.json(fundamentals_details)
+
                             if fundamentals_pass:
                                 # 基本面通过，检查估值
                                 valuation_pass, valuation_details = screener.check_valuation_pass(
@@ -2228,6 +2302,10 @@ def page_full_market_screening():
                                     min_roe=min_roe
                                 )
                                 
+                                if ts_code == '000429.SZ':
+                                    st.warning(f"💰 Valuation Pass: {valuation_pass}")
+                                    st.json(valuation_details)
+
                                 if valuation_pass:
                                     # 通过所有筛选，添加到结果
                                     stock_result = {
@@ -2246,21 +2324,32 @@ def page_full_market_screening():
                             st.session_state.screening_progress['failed'] += 1
                     else:
                         st.session_state.screening_progress['failed'] += 1
+
                     
                     # 更新进度和时间记录
-                    current_time = datetime.now()
-                    progress_start_time = st.session_state.screening_progress.get('start_time', current_time)
+                    current_timestamp = datetime.now().timestamp()
+                    progress_start_time = st.session_state.screening_progress.get('start_time', current_timestamp)
+                    
+                    # 确保是float
+                    if isinstance(progress_start_time, datetime):
+                        progress_start_time = progress_start_time.timestamp()
+
                     if current_index > 0:
                         # 计算当前股票的耗时（从上次更新到现在）
                         last_time = st.session_state.screening_progress.get('last_update_time', progress_start_time)
-                        stock_time = (current_time - last_time).total_seconds()
+                        
+                        # 确保是float
+                        if isinstance(last_time, datetime):
+                            last_time = last_time.timestamp()
+                            
+                        stock_time = current_timestamp - last_time
                         time_records = st.session_state.screening_progress.get('time_records', [])
                         time_records.append(stock_time)
                         st.session_state.screening_progress['time_records'] = time_records
                     
                     st.session_state.screening_progress['processed'] = current_index + 1
                     st.session_state.screening_progress['current_index'] = current_index + 1
-                    st.session_state.screening_progress['last_update_time'] = current_time
+                    st.session_state.screening_progress['last_update_time'] = current_timestamp
                     
                     # 继续处理下一只（自动刷新）
                     time.sleep(0.5)  # 短暂延迟，让用户看到进度
@@ -2579,7 +2668,7 @@ def page_watchlist():
                         df = df.sort_values('trade_date', ascending=True).reset_index(drop=True)
                         
                         # 计算MACD
-                        df = PRValuation.calculate_macd(df, fast_period=12, slow_period=23, signal_period=8)
+                        df = PRValuation.calculate_macd(df, fast_period=10, slow_period=23, signal_period=8)
                         df = PRValuation.calculate_yellow_bar(df)
                         
                         last_row = df.iloc[-1]

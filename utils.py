@@ -690,17 +690,26 @@ def fetch_audit_records(
         api_limit = 10000  # 不限制，使用足够大的值确保获取所有数据
     if start_date and end_date:
         print(f"📊 调用fina_audit API，limit={api_limit}（不限制，获取所有数据），日期范围：{start_date} - {end_date}")
+    
+    # 修正：不传递start_date和end_date给API，避免因公告日期过滤导致丢失数据
+    # 统一获取最近的记录，然后手动过滤
     params: Dict[str, Any] = {
         "ts_code": ts_code,
-        "start_date": start_date,
-        "end_date": end_date,
-        "limit": api_limit,
+        "limit": 5000, # 获取足够多的历史记录
         "fields": fields,
     }
     params = {k: v for k, v in params.items() if v is not None}
     df = pro.fina_audit(**params)
+    
     if df.empty:
         raise ValueError("未获取到审计意见，请确认权限或披露情况。")
+
+    # 手动过滤报告期 (end_date)
+    if start_date:
+        df = df[df["end_date"] >= start_date]
+    if end_date:
+        df = df[df["end_date"] <= end_date]
+
     # 不再使用head限制，因为已经通过start_date和end_date正确过滤了
     df = df.sort_values("end_date", ascending=False)
     records = [
@@ -725,21 +734,14 @@ def fetch_balancesheet(
     """获取资产负债表数据。"""
     pro = get_pro_client()
     fields = "ts_code,ann_date,end_date,total_assets,total_liab"
-    # 重要：不限制数据量，获取所有可用数据
-    # 如果设置了日期范围，使用足够大的limit确保获取所有数据
-    if start_date and end_date:
-        start_year = int(start_date[:4])
-        end_year = int(end_date[:4])
-        year_span = end_year - start_year + 1
-        # 每年最多4条（Q1, Q2, Q3, 年报），乘以年份跨度，再加大量缓冲确保获取所有数据
-        api_limit = year_span * 20  # 每年20条记录（足够大的缓冲，确保获取所有数据）
-    else:
-        api_limit = 10000  # 不限制，使用足够大的值确保获取所有数据
+    # 修正：不传递start_date和end_date给API，避免因公告日期过滤导致丢失数据
+    # 直接获取足够多的历史数据，由_filter_annual_records负责按报告期过滤
+    api_limit = 5000
     print(f"📊 调用balancesheet API，limit={api_limit}（不限制，获取所有数据），日期范围：{start_date} - {end_date}")
     df = pro.balancesheet(
         ts_code=ts_code,
-        start_date=start_date,
-        end_date=end_date,
+        # start_date=start_date, # 移除
+        # end_date=end_date,     # 移除
         fields=fields,
         limit=api_limit,
     )
@@ -761,21 +763,14 @@ def fetch_income(
     """获取利润表数据。"""
     pro = get_pro_client()
     fields = "ts_code,ann_date,end_date,revenue,oper_cost,n_income"
-    # 重要：不限制数据量，获取所有可用数据
-    # 如果设置了日期范围，使用足够大的limit确保获取所有数据
-    if start_date and end_date:
-        start_year = int(start_date[:4])
-        end_year = int(end_date[:4])
-        year_span = end_year - start_year + 1
-        # 每年最多4条（Q1, Q2, Q3, 年报），乘以年份跨度，再加大量缓冲确保获取所有数据
-        api_limit = year_span * 20  # 每年20条记录（足够大的缓冲，确保获取所有数据）
-    else:
-        api_limit = 10000  # 不限制，使用足够大的值确保获取所有数据
+    # 修正：不传递start_date和end_date给API，避免因公告日期过滤导致丢失数据
+    # 直接获取足够多的历史数据，由_filter_annual_records负责按报告期过滤
+    api_limit = 5000
     print(f"📊 调用income API，limit={api_limit}（不限制，获取所有数据），日期范围：{start_date} - {end_date}")
     df = pro.income(
         ts_code=ts_code,
-        start_date=start_date,
-        end_date=end_date,
+        # start_date=start_date, # 移除
+        # end_date=end_date,     # 移除
         fields=fields,
         limit=api_limit,
     )
@@ -797,21 +792,14 @@ def fetch_cashflow(
     """获取现金流量表数据。"""
     pro = get_pro_client()
     fields = "ts_code,ann_date,end_date,n_cashflow_act"
-    # 重要：不限制数据量，获取所有可用数据
-    # 如果设置了日期范围，使用足够大的limit确保获取所有数据
-    if start_date and end_date:
-        start_year = int(start_date[:4])
-        end_year = int(end_date[:4])
-        year_span = end_year - start_year + 1
-        # 每年最多4条（Q1, Q2, Q3, 年报），乘以年份跨度，再加大量缓冲确保获取所有数据
-        api_limit = year_span * 20  # 每年20条记录（足够大的缓冲，确保获取所有数据）
-    else:
-        api_limit = 10000  # 不限制，使用足够大的值确保获取所有数据
+    # 修正：不传递start_date和end_date给API，避免因公告日期过滤导致丢失数据
+    # 直接获取足够多的历史数据，由_filter_annual_records负责按报告期过滤
+    api_limit = 5000
     print(f"📊 调用cashflow API，limit={api_limit}（不限制，获取所有数据），日期范围：{start_date} - {end_date}")
     df = pro.cashflow(
         ts_code=ts_code,
-        start_date=start_date,
-        end_date=end_date,
+        # start_date=start_date, # 移除
+        # end_date=end_date,     # 移除
         fields=fields,
         limit=api_limit,
     )
@@ -826,16 +814,21 @@ def fetch_cashflow(
 
 def calculate_recent_years(required_years: int = 5) -> Tuple[int, int]:
     """
-    智能计算"最近N年"的年份范围,考虑年报发布时间
+    智能计算"最近N年"的年份范围,考虑年报发布时间和数据源更新滞后
+    
+    用于：单项分析等需要指定年份范围的场景
     
     逻辑:
     - 年报通常在次年4-5月发布
-    - 如果当前月份 < 5月,上一年年报可能未发布,需要往前推一年
-    - 如果当前月份 >= 5月,上一年年报应该已发布,可以包含
+    - 数据源（Tushare）可能有1-3个月的更新滞后
+    - 保守估计：8月之后才认为上一年年报数据已在数据源中完全更新
     
     例子:
-    - 2026年1月,需要5年: 返回 (2020, 2024) - 因为2025年报还没出
-    - 2026年6月,需要5年: 返回 (2021, 2025) - 因为2025年报已出
+    - 2025年11月,需要5年: 返回 (2020, 2024)
+    - 2026年1月,需要5年: 返回 (2020, 2024) - 保守策略
+    - 2026年8月,需要5年: 返回 (2021, 2025) - 此时2025年报应已更新
+    
+    注意：全网筛选使用不同的策略（直接获取所有可用数据）
     
     参数:
         required_years: 需要的年份数量,默认5年
@@ -846,17 +839,20 @@ def calculate_recent_years(required_years: int = 5) -> Tuple[int, int]:
     current_year = datetime.now().year
     current_month = datetime.now().month
     
-    # 判断上一年的年报是否已发布
-    if current_month >= 5:
-        # 5月及之后,上一年年报应该已发布
+    # 更保守的判断：考虑数据源更新滞后
+    # 8月之前：使用前年作为结束年份（避免查询可能未更新的数据）
+    # 8月之后：使用上一年作为结束年份（此时数据应该已完全更新）
+    if current_month >= 8:
+        # 8月及之后,上一年年报应该已在数据源中完全更新
         end_year = current_year - 1
     else:
-        # 1-4月,上一年年报可能未发布,往前推一年
+        # 1-7月,上一年年报可能还未在数据源中完全更新,使用前年更安全
         end_year = current_year - 2
     
     start_year = end_year - required_years + 1
     
     print(f"📅 智能年份计算: 当前{current_year}年{current_month}月,最近{required_years}年 = {start_year}-{end_year}")
+    print(f"💡 说明: 考虑数据源更新滞后，采用保守策略")
     
     return start_year, end_year
 
@@ -990,9 +986,15 @@ def analyze_fundamentals(
                             # 我们允许使用缓存（因为最近一年可能还没发布，或者Tushare还没更新）
                             elif len(effective_missing) <= 1:
                                 # 只有最近一年缺失，或者没有有效缺失（只缺当前年）
+                                should_fetch = False
+                                
                                 if effective_missing:
                                     missing_year = effective_missing[0]
-                                    if current_month >= 5:
+                                    # 如果缺失的是上一年，且当前月份>=4，尝试获取（因为年报可能已发布）
+                                    if missing_year == current_year - 1 and current_month >= 4:
+                                        should_fetch = True
+                                        print(f"💡 缺失{missing_year}年数据，当前{current_month}月，尝试获取更新...")
+                                    elif current_month >= 5:
                                         print(f"⚠️ 注意：{missing_year}年年报应该已经发布（当前是{current_year}年{current_month}月），但Tushare数据源可能还没更新")
                                         print(f"💡 使用现有缓存数据（{cached_years}），如果后续数据源更新，缓存会自动刷新")
                                     else:
@@ -1000,10 +1002,19 @@ def analyze_fundamentals(
                                 else:
                                     print(f"💡 说明：{current_year}年年报尚未发布，使用缓存数据是合理的")
                                 
-                                print(f"⚡ 缓存命中！跳过API调用，直接返回缓存数据（节省约6-10秒）")
-                                return result
-                                
-                            # 3. 如果过滤后仍缺失超过1年（例如缺失2023, 2024），启用增量更新
+                                if not should_fetch:
+                                    print(f"⚡ 缓存命中！跳过API调用，直接返回缓存数据（节省约6-10秒）")
+                                    return result
+                                else:
+                                    # 需要获取数据，逻辑同下
+                                    print(f"🔄 启用增量更新: 尝试获取缺失年份{effective_missing}")
+                                    fetch_start_year = min(effective_missing)
+                                    fetch_end_year = max(effective_missing)
+                                    fetch_start_date = f"{fetch_start_year}0101"
+                                    fetch_end_date = f"{fetch_end_year}1231"
+                                    
+                                    incremental_update = True
+                                    cached_base_data = result
                             else:
                                 print(f"💡 检测到缺失多个年份: {effective_missing}")
                                 print(f"🔄 启用增量更新: 只获取缺失年份{effective_missing},不删除现有缓存{cached_years}")
@@ -1014,7 +1025,7 @@ def analyze_fundamentals(
                                 fetch_start_date = f"{fetch_start_year}0101"
                                 fetch_end_date = f"{fetch_end_year}1231"
                                 
-                                print(f"� 准备获取缺失年份: {fetch_start_year}-{fetch_end_year}")
+                                print(f"📥 准备获取缺失年份: {fetch_start_year}-{fetch_end_year}")
                                 
                                 # 设置增量更新标志
                                 incremental_update = True
@@ -1084,47 +1095,87 @@ def analyze_fundamentals(
     else:
         print(f"⚡ 公司信息命中缓存，跳过API延迟等待")
     
-    # 第2次调用：审计意见（fina_audit API）
-    if progress_callback:
-        progress_callback("正在获取审计意见... (2/5)", 0.40)
-    print(f"📅 查询日期范围：start_date={fetch_start_date}, end_date={fetch_end_date}")
-    audit_records = fetch_audit_records(ts_code, fetch_start_date, fetch_end_date, max_records)
-    print(f"✅ 已获取审计意见，共{len(audit_records)}条记录")
-    
-    # 财务数据API延迟（根据用户积分等级和并发线程数自动计算）
-    financial_api_delay = get_api_delay('fina_audit', user_points, max_workers)
-    # api_delay参数作为额外延迟（在API规则延迟基础上增加）
-    if api_delay > 0:
-        financial_api_delay = financial_api_delay + api_delay
-        print(f"⏰ 等待{financial_api_delay:.2f}秒（基础延迟{get_api_delay('fina_audit', user_points, max_workers):.2f}秒 + 额外延迟{api_delay}秒，{max_workers}线程并发）...")
-    else:
-        print(f"⏰ 等待{financial_api_delay:.2f}秒（财务数据API：每分钟200次，{user_points:.0f}分，{max_workers}线程并发）...")
-    
-    if financial_api_delay > 0:
-        time.sleep(financial_api_delay)
-    
-    # 第3次调用：资产负债表（balancesheet API）
-    if progress_callback:
-        progress_callback("正在获取资产负债表... (3/5)", 0.60)
-    balance_df = fetch_balancesheet(ts_code, fetch_start_date, fetch_end_date, max_records)
-    print(f"✅ 已获取资产负债表")
-    
-    if financial_api_delay > 0:
-        time.sleep(financial_api_delay)
-    
-    # 第4次调用：利润表（income API）
-    if progress_callback:
-        progress_callback("正在获取利润表... (4/5)", 0.80)
-    income_df = fetch_income(ts_code, fetch_start_date, fetch_end_date, max_records)
-    print(f"✅ 已获取利润表")
-    
-    if financial_api_delay > 0:
-        time.sleep(financial_api_delay)
-    
-    # 第5次调用：现金流量表（cashflow API）
-    if progress_callback:
-        progress_callback("正在获取现金流量表... (5/5)", 1.0)
-    cashflow_df = fetch_cashflow(ts_code, fetch_start_date, fetch_end_date, max_records)
+    # 初始化DataFrame，防止API调用失败导致变量未定义
+    audit_records = []
+    # 初始化带列名的空DataFrame，防止后续merge时报KeyError
+    balance_df = pd.DataFrame(columns=["end_date", "total_assets", "total_liab"])
+    income_df = pd.DataFrame(columns=["end_date", "revenue", "oper_cost", "n_income"])
+    cashflow_df = pd.DataFrame(columns=["end_date", "n_cashflow_act"])
+
+    try:
+        # 第2次调用：审计意见（fina_audit API）
+        if progress_callback:
+            progress_callback("正在获取审计意见... (2/5)", 0.40)
+        print(f"📅 查询日期范围：start_date={fetch_start_date}, end_date={fetch_end_date}")
+        try:
+            audit_records = fetch_audit_records(ts_code, fetch_start_date, fetch_end_date, max_records)
+            print(f"✅ 已获取审计意见，共{len(audit_records)}条记录")
+        except ValueError as e:
+            if incremental_update:
+                print(f"⚠️ 增量更新未获取到审计意见（可能是该时间段无数据）：{e}")
+            else:
+                raise e
+        
+        # 财务数据API延迟（根据用户积分等级和并发线程数自动计算）
+        financial_api_delay = get_api_delay('fina_audit', user_points, max_workers)
+        # api_delay参数作为额外延迟（在API规则延迟基础上增加）
+        if api_delay > 0:
+            financial_api_delay = financial_api_delay + api_delay
+            print(f"⏰ 等待{financial_api_delay:.2f}秒（基础延迟{get_api_delay('fina_audit', user_points, max_workers):.2f}秒 + 额外延迟{api_delay}秒，{max_workers}线程并发）...")
+        else:
+            print(f"⏰ 等待{financial_api_delay:.2f}秒（财务数据API：每分钟200次，{user_points:.0f}分，{max_workers}线程并发）...")
+        
+        if financial_api_delay > 0:
+            time.sleep(financial_api_delay)
+        
+        # 第3次调用：资产负债表（balancesheet API）
+        if progress_callback:
+            progress_callback("正在获取资产负债表... (3/5)", 0.60)
+        try:
+            balance_df = fetch_balancesheet(ts_code, fetch_start_date, fetch_end_date, max_records)
+            print(f"✅ 已获取资产负债表")
+        except ValueError as e:
+            if incremental_update:
+                print(f"⚠️ 增量更新未获取到资产负债表（可能是该时间段无数据）：{e}")
+            else:
+                raise e
+        
+        if financial_api_delay > 0:
+            time.sleep(financial_api_delay)
+        
+        # 第4次调用：利润表（income API）
+        if progress_callback:
+            progress_callback("正在获取利润表... (4/5)", 0.80)
+        try:
+            income_df = fetch_income(ts_code, fetch_start_date, fetch_end_date, max_records)
+            print(f"✅ 已获取利润表")
+        except ValueError as e:
+            if incremental_update:
+                print(f"⚠️ 增量更新未获取到利润表（可能是该时间段无数据）：{e}")
+            else:
+                raise e
+        
+        if financial_api_delay > 0:
+            time.sleep(financial_api_delay)
+        
+        # 第5次调用：现金流量表（cashflow API）
+        if progress_callback:
+            progress_callback("正在获取现金流量表... (5/5)", 1.0)
+        try:
+            cashflow_df = fetch_cashflow(ts_code, fetch_start_date, fetch_end_date, max_records)
+            print("✅ 已获取现金流量表，数据收集完成！")
+        except ValueError as e:
+            if incremental_update:
+                print(f"⚠️ 增量更新未获取到现金流量表（可能是该时间段无数据）：{e}")
+            else:
+                raise e
+                
+    except Exception as e:
+        # 如果是增量更新且出现异常，我们可能希望保留现有缓存数据而不是完全失败
+        # 但目前架构下，如果API调用本身失败（非ValueError），可能确实是网络或Token问题
+        print(f"❌ 获取数据时发生错误: {e}")
+        if not incremental_update:
+            raise e
     print("✅ 已获取现金流量表，数据收集完成！")
     print(f"📊 获取到的原始数据统计：")
     if not balance_df.empty:

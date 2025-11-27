@@ -393,5 +393,5 @@ class DataCache:
 
 
 # 全局缓存实例
-data_cache = DataCache(cache_dir="data/cache", expire_hours=24)
+data_cache = DataCache(cache_dir="data/cache", expire_hours=24 * 365 * 10)
 

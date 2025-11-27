@@ -282,20 +282,20 @@ class StockScreener:
             valuation_pass = pr_pass and roe_pass
 
             valuation_details = {
-                'pe_ttm': result['pe_ttm'],
-                'roe_waa': roe_waa,
-                'eps': result['eps'],
-                'dividend_per_share': result['dividend_per_share'],
-                'payout_ratio': result['payout_ratio'],
-                'correction_factor': result['correction_factor'],
-                'standard_pr': result['standard_pr'],
-                'corrected_pr': result['corrected_pr'],
-                'final_pr': final_pr,
-                'pr_threshold': pr_threshold,
-                'min_roe': min_roe,
-                'pr_pass': pr_pass,
-                'roe_pass': roe_pass,
-                'valuation_pass': valuation_pass
+                'PE(TTM)': result['pe_ttm'],
+                'ROE(加权)': roe_waa,
+                'EPS': result['eps'],
+                '每股股息': result['dividend_per_share'],
+                '股息支付率': result['payout_ratio'],
+                '修正系数': result['correction_factor'],
+                '标准PR': result['standard_pr'],
+                '修正PR': result['corrected_pr'],
+                '最终PR': final_pr,
+                'PR阈值': pr_threshold,
+                'ROE阈值': min_roe,
+                'PR通过': pr_pass,
+                'ROE通过': roe_pass,
+                '估值通过': valuation_pass
             }
 
             return valuation_pass, valuation_details
@@ -328,15 +328,17 @@ class StockScreener:
             筛选结果字典，如果分析失败返回None
         """
         try:
-            # 优化：在执行分析前动态获取当前年份，使用最近5年数据
-            current_year = datetime.now().year  # 获取当前年份（如2025年）
+            # 🎯 全网筛选专用：获取所有可用数据
+            # analyze_single_stock在screen_all_stocks中被调用
+            # 使用相同的策略：不预判，直接获取所有数据
+            current_year = datetime.now().year
             if end_year is None:
-                end_year = current_year  # 结束年份：当前年份（如2025年），查询end_date<=20251231可获取2024年年报
+                end_year = 2999  # 让数据源返回所有可用数据
             if start_year is None:
-                start_year = current_year - 5  # 开始年份：当前年份-5（如2020年，最近5年）
+                start_year = 1990  # 中国股市开始年份
             
-            # 计算要求的年份跨度
-            required_years = end_year - start_year + 1
+            # 计算要求的年份跨度（固定为5年）
+            required_years = 5
             
             # 检查内存缓存
             cache_key = f"{ts_code}_{pr_threshold}_{min_roe}_{start_year}_{end_year}"
@@ -349,7 +351,7 @@ class StockScreener:
                 debug_callback(f"🔍 开始分析 {ts_code}...", 'debug')
             
             # 打印到控制台，确认任务在执行
-            print(f"[ANALYZE {datetime.now().strftime('%H:%M:%S')}] 开始分析股票: {ts_code} (年份范围: {start_year}-{end_year}, 需{required_years}年数据)")
+            print(f"[ANALYZE {datetime.now().strftime('%H:%M:%S')}] 开始分析股票: {ts_code} (获取所有可用数据, 需{required_years}年)")
 
             # 执行财务分析
             start_date = f"{start_year}0101"
@@ -411,8 +413,8 @@ class StockScreener:
                 pr_pass = valuation_details.get('pr_pass', False)
                 roe_pass = valuation_details.get('roe_pass', False)
                 debug_callback(
-                    f"💰 {ts_code} 估值检查: PR={pr:.4f if isinstance(pr, (int, float)) else pr} {'✅' if pr_pass else '❌'}, "
-                    f"ROE={roe:.2f if isinstance(roe, (int, float)) else roe}% {'✅' if roe_pass else '❌'}",
+                    f"💰 {ts_code} 估值检查: PR={pr} {'✅' if pr_pass else '❌'}, "
+                    f"ROE={roe} {'✅' if roe_pass else '❌'}",
                     'debug'
                 )
 
@@ -473,15 +475,22 @@ class StockScreener:
         返回:
             通过筛选的股票列表
         """
-        # 优化：在执行筛选前动态获取当前年份，使用最近5年数据
-        current_year = datetime.now().year  # 获取当前年份（如2025年）
-        if end_year is None:
-            end_year = current_year  # 结束年份：当前年份（如2025年），查询end_date<=20251231可获取2024年年报
-        if start_year is None:
-            start_year = current_year - 5  # 开始年份：当前年份-5（如2020年，最近5年）
+        # 🎯 全网筛选专用策略：获取所有可用数据，然后取最近5年
+        # 不再猜测年报发布时间或数据源更新情况
+        # 直接设置一个很大的结束年份（2999），让数据源返回所有可用数据
+        # 后续在check_fundamentals_pass中会自动过滤出最近的N年数据
         
+        if end_year is None:
+            # 使用2999年，让数据源返回所有可用数据
+            end_year = 2999
+        if start_year is None:
+            # 使用1990年(中国股市开始年份)，确保覆盖所有上市公司
+            start_year = 1990
+        
+        current_year = datetime.now().year
         print(f"🚀 开始A股全网筛选...")
-        print(f"📅 筛选年份范围：{start_year}年 - {end_year}年（查询end_date<={end_year}1231可获取{start_year}-{end_year-1}年年报）")
+        print(f"📅 筛选策略：查询范围 {start_year}-{end_year}（获取所有可用数据）")
+        print(f"💡 说明：不预判数据更新情况，让数据源返回最新可用数据，然后自动取最近5年")
 
         # 1. 获取股票列表
         print(f"[SCREENING {datetime.now().strftime('%H:%M:%S')}] ========== 开始获取股票列表 ==========")
@@ -516,93 +525,6 @@ class StockScreener:
 
         print(f"📊 共需筛选 {total_stocks} 只股票")
         
-        # ===== 阶段1: 快速预扫描缓存状态 =====
-        print(f"[CACHE-SCAN {datetime.now().strftime('%H:%M:%S')}] 🔍 开始扫描缓存状态...")
-        if progress_callback:
-            progress_callback(f"🔍 正在扫描 {total_stocks} 只股票的缓存状态...", 0.12)
-        
-        cached_stocks = []  # 有缓存的股票
-        uncached_stocks = []  # 无缓存的股票
-        
-        scan_start = time.time()
-        for idx, (_, row) in enumerate(stock_list.iterrows()):
-            ts_code = row['ts_code']
-            has_cache = self.check_cache_exists(ts_code, start_year, end_year)
-            
-            if has_cache:
-                cached_stocks.append(row)
-            else:
-                uncached_stocks.append(row)
-            
-            # 每扫描1000只股票汇报一次
-            if (idx + 1) % 1000 == 0:
-                print(f"[CACHE-SCAN] 已扫描 {idx + 1}/{total_stocks} 只股票...")
-        
-        scan_duration = time.time() - scan_start
-        print(f"[CACHE-SCAN] ✅ 缓存扫描完成，耗时 {scan_duration:.2f}秒")
-        print(f"[CACHE-SCAN] 📊 统计: 有缓存 {len(cached_stocks)} 只 | 无缓存 {len(uncached_stocks)} 只")
-        
-        if progress_callback:
-            progress_callback(
-                f"✅ 缓存扫描完成: 有缓存 {len(cached_stocks)} 只, 无缓存 {len(uncached_stocks)} 只",
-                0.15
-            )
-
-        # ===== 阶段2: 分组并发处理 =====
-        
-        # 2.1 处理有缓存的股票 (使用高并发)
-        if cached_stocks:
-            cache_workers = min(50, len(cached_stocks))  # 最多50线程
-            print(f"[CACHED {datetime.now().strftime('%H:%M:%S')}] 🚀 开始处理有缓存的股票，使用 {cache_workers} 个线程")
-            if progress_callback:
-                progress_callback(f"🚀 快速处理 {len(cached_stocks)} 只有缓存的股票 (使用 {cache_workers} 线程)...", 0.18)
-            
-            cached_passed, cached_failed = self._process_stock_batch(
-                cached_stocks,
-                stock_list,
-                pr_threshold,
-                min_roe,
-                start_year,
-                end_year,
-                cache_workers,  # 高并发
-                0.0,  # 无需API延迟
-                progress_callback,
-                debug_callback,
-                user_points,
-                batch_name="CACHED"
-            )
-            
-            passed_stocks.extend(cached_passed)
-            failed_count += cached_failed
-            
-            print(f"[CACHED] ✅ 有缓存组处理完成: 通过 {len(cached_passed)} 只, 失败 {cached_failed} 只")
-        
-        # 2.2 处理无缓存的股票 (使用原并发数和API延迟)
-        if uncached_stocks:
-            print(f"[UNCACHED {datetime.now().strftime('%H:%M:%S')}] 🚀 开始处理无缓存的股票，使用 {max_workers} 个线程")
-            if progress_callback:
-                progress_callback(f"🔄 处理 {len(uncached_stocks)} 只无缓存的股票 (使用 {max_workers} 线程，需调用API)...", 0.50)
-            
-            uncached_passed, uncached_failed = self._process_stock_batch(
-                uncached_stocks,
-                stock_list,
-                pr_threshold,
-                min_roe,
-                start_year,
-                end_year,
-                max_workers,  # 原并发数
-                api_delay,  # 保留API延迟
-                progress_callback,
-                debug_callback,
-                user_points,
-                batch_name="UNCACHED"
-            )
-            
-            passed_stocks.extend(uncached_passed)
-            failed_count += uncached_failed
-            
-            print(f"[UNCACHED] ✅ 无缓存组处理完成: 通过 {len(uncached_passed)} 只, 失败 {uncached_failed} 只")
-
         # 优化：根据用户配置的并发数，不再强制限制为4
         # 用户可以根据自己的积分等级调整并发数（中级用户建议10，高级用户可到20）
         # 注意：如果触发API频率限制，需要降低并发数或增加延迟
@@ -659,8 +581,10 @@ class StockScreener:
                                 valuation = result.get('valuation_details', {})
                                 pr = valuation.get('final_pr', 'N/A')
                                 roe = valuation.get('roe_waa', 'N/A')
+                                pr_str = f"{pr:.4f}" if isinstance(pr, (int, float)) else str(pr)
+                                roe_str = f"{roe:.2f}" if isinstance(roe, (int, float)) else str(roe)
                                 progress_callback(
-                                    f"✅ {ts_code} {stock_name} 通过筛选 | PR={pr:.4f if isinstance(pr, (int, float)) else pr}, ROE={roe:.2f if isinstance(roe, (int, float)) else roe}%",
+                                    f"✅ {ts_code} {stock_name} 通过筛选 | PR={pr_str}, ROE={roe_str}%",
                                     0
                                 )
                         else:
